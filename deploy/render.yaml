@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: worldcup-pickem-api
+    runtime: python
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_SECRET
+        sync: false
+
+  - type: worker
+    name: worldcup-pickem-bot
+    runtime: python
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot/bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: WEB_APP_URL
+        sync: false
+      - key: BACKEND_BASE_URL
+        sync: false
