@@ -527,7 +527,6 @@ const state = {
   groupFairPlay:{},
   fairPlayOpen:{},
   playoffPicks:{},
-  community:[],
   saving:false,
   lastSaveOk:false
 };
@@ -1194,25 +1193,13 @@ async function saveSubmission(){
   return res.json();
 }
 
-async function fetchCommunity(){
-  if(!BACKEND_BASE_URL) return;
-  try{
-    const res = await fetch(`${BACKEND_BASE_URL}/api/community/${TOURNAMENT_SLUG}`);
-    const data = await res.json();
-    state.community = data.snapshot?.items || data.items || [];
-  }catch(e){
-    state.community = [];
-  }
-}
-
 async function handleSaveClick(){
   if(state.saving) return;
   state.saving = true;
   state.lastSaveOk = false;
-  renderResults(); // чтобы обновился вид кнопки
+  renderResults();
   try{
-    await saveSubmission();              // сохраняем результат [web:32]
-    await fetchCommunity();              // обновляем статистику [web:32]
+    await saveSubmission();     // сохраняем только для статистики на бэке [web:39]
     state.lastSaveOk = true;
   }catch(e){
     state.lastSaveOk = false;
@@ -1234,13 +1221,6 @@ function renderResults(){
     [4,payload.fourth_place||'—']
   ];
 
-  const communityRows = state.community.length
-    ? state.community
-    : [
-        {label:'Чемпион',leader:'Бразилия',share:'31%'},
-        {label:'Финалист',leader:'Франция',share:'18%'}
-      ];
-
   const saveLabel = state.saving
     ? 'Сохраняем…'
     : state.lastSaveOk
@@ -1249,7 +1229,7 @@ function renderResults(){
 
   wrap.innerHTML = `
     <h2 style="margin-top:0">Итог</h2>
-    <p class="muted">Итоговые места рассчитываются автоматически.</p>
+    <p class="muted">Итоговые места рассчитываются автоматически. Кнопка «Сохранить результат» отправляет твой прогноз на сервер.</p>
 
     <div class="summary-grid">
       <div class="card">
@@ -1281,43 +1261,20 @@ function renderResults(){
       </button>
     </div>
 
-    <div class="grid grid-2" style="margin-top:16px">
-      <div class="card">
-        <h3 style="margin-top:0">Итоговые места</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr><th>Место</th><th>Команда</th></tr>
-              </thead>
-              <tbody>
-                ${rows.map(r=>`
-                  <tr><td>${r[0]}</td><td>${r[1]}</td></tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">Что выбрали другие</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr><th>Срез</th><th>Лидер</th><th>Доля</th></tr>
-              </thead>
-              <tbody>
-                ${communityRows.map(i=>`
-                  <tr>
-                    <td>${i.label}</td>
-                    <td>${i.leader}</td>
-                    <td>${i.share}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
+    <div class="card" style="margin-top:16px">
+      <h3 style="margin-top:0">Итоговые места</h3>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Место</th><th>Команда</th></tr>
+            </thead>
+            <tbody>
+              ${rows.map(r=>`
+                <tr><td>${r[0]}</td><td>${r[1]}</td></tr>
+              `).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1342,7 +1299,6 @@ function render(){
   renderResults();
 }
 
-fetchCommunity();
 render();
 </script>
 </body>
