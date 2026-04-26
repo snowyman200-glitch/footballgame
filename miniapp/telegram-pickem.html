@@ -15,9 +15,9 @@
 <body>
 <div class="app">
   <section class="panel hero">
-    <div class="row"><span class="btn secondary" style="cursor:default">Telegram Mini App</span><span class="btn secondary" style="cursor:default">104 матча</span><span class="btn secondary" style="cursor:default">12 групп</span></div>
-    <h1>World Cup Pick'em</h1>
-    <p class="muted" style="margin:0">Полная версия: групповой этап, рейтинг третьих мест, плей-офф, итоговые места, community stats и отправка прогноза на backend.</p>
+    <div class="row"><span class="btn secondary" style="cursor:default">ЧМ-26</span><span class="btn secondary" style="cursor:default">104 матча</span><span class="btn secondary" style="cursor:default">12 групп</span></div>
+    <h1>Чемпионат Мира 2026</h1>
+    <p class="muted" style="margin:0">Групповой этап, рейтинг третьих мест, плей-офф, итоговые места.</p>
   </section>
 
   <div class="tabs" id="topTabs"></div>
@@ -118,10 +118,11 @@ const THIRD_MATRIX = {
 };
 function resolveSlot(slot, ctx){ if(slot.type==='winner') return ctx.standings[slot.group][0].team; if(slot.type==='runner') return ctx.standings[slot.group][1].team; if(slot.type==='third') return ctx.thirdAssignments[slot.matchId] || 'TBD'; if(slot.type==='match') return ctx.winners[slot.match]||'TBD'; if(slot.type==='loser') return ctx.losers[slot.match]||'TBD'; return 'TBD'; }
 function assignThirdTeams(thirds){
-  const qualified = thirds.filter(t=>t.qualified).map(t=>t.group).sort().join('');
+  const eligibleQualified = thirds.filter(t=>t.qualified && 'CDEFGHIJKL'.includes(t.group));
+  const qualified = eligibleQualified.map(t=>t.group).sort().join('');
   const mapping = THIRD_MATRIX[qualified];
   if(!mapping) return {};
-  const byGroup = Object.fromEntries(thirds.filter(t=>t.qualified).map(t=>[t.group, t.team]));
+  const byGroup = Object.fromEntries(eligibleQualified.map(t=>[t.group, t.team]));
   return Object.fromEntries(Object.entries(mapping).map(([matchId, group])=>[matchId, byGroup[group] || 'TBD']));
 }
 function computeBracket(){ const standings=allStandings(); const thirds=thirdPlaces(standings); const thirdAssignments=assignThirdTeams(thirds); const ctx={standings,thirds,thirdAssignments,winners:{},losers:{}}; const matches=PLAYOFF_DEFS.map(def=>{ const leftSlot = def.left.type==='third' ? {...def.left, matchId:def.id} : def.left; const rightSlot = def.right.type==='third' ? {...def.right, matchId:def.id} : def.right; const home=resolveSlot(leftSlot,ctx); const away=resolveSlot(rightSlot,ctx); let winner=state.playoffPicks[def.id]||null; if(winner&&winner!==home&&winner!==away) winner=null; if(winner){ctx.winners[def.id]=winner;ctx.losers[def.id]=winner===home?away:home;} return {...def,home,away,winner}; }); return {standings,thirds,matches}; }
