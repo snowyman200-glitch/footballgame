@@ -4,423 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>telegram-pickem</title>
-
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="./config.js"></script>
-
   <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
-
   <style>
-    :root{
-      --bg:#0c1117;
-      --surface:#121922;
-      --surface2:#18212d;
-      --border:rgba(255,255,255,.09);
-      --text:#f3f1ea;
-      --muted:#b4ad9f;
-      --faint:#7e8591;
-      --primary:#c8a96a;
-      --primary2:#e2c48b;
-      --success:#8fba7a;
-      --warning:#d9ae57;
-      --danger:#d27a7a;
-      --shadow:0 18px 40px rgba(0,0,0,.34);
-      --r:18px;
-      --pill:999px;
-    }
-
-    *{box-sizing:border-box}
-
-    html,body{
-      margin:0;
-      background:
-        radial-gradient(circle at top,rgba(200,169,106,.16),transparent 24%),
-        linear-gradient(180deg,#0f141b 0%,#0b1016 100%),
-        var(--bg);
-      color:var(--text);
-      font-family:'Satoshi',sans-serif;
-    }
-
-    body{line-height:1.5}
-
-    .app{
-      max-width:1040px;
-      margin:0 auto;
-      padding:16px;
-    }
-
-    .panel,.match,.card{
-      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)),var(--surface);
-      border:1px solid var(--border);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
-    }
-
-    .panel{
-      padding:20px;
-      margin-bottom:16px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .panel::before{
-      content:'';
-      position:absolute;
-      inset:0;
-      background:linear-gradient(180deg,rgba(200,169,106,.08),transparent 34%);
-      pointer-events:none;
-    }
-
-    .hero{
-      display:grid;
-      gap:12px;
-    }
-
-    .hero h1{
-      font-family:'Cabinet Grotesk',sans-serif;
-      margin:0;
-      font-size:clamp(30px,5vw,48px);
-      letter-spacing:-.03em;
-      text-transform:uppercase;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .tabs{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin:16px 0;
-    }
-
-    .tab-groups{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      padding:10px 12px;
-      border:1px solid var(--border);
-      border-radius:20px;
-      background:rgba(255,255,255,.025);
-      backdrop-filter:blur(8px);
-      margin-bottom:8px;
-    }
-
-    .tab,.choice,.btn{
-      min-height:44px;
-      border:none;
-      border-radius:var(--pill);
-      padding:.75rem 1rem;
-      background:var(--surface2);
-      color:var(--text);
-      cursor:pointer;
-    }
-
-    .tab.top-level{
-      background:rgba(200,169,106,.08);
-      border:1px solid rgba(200,169,106,.24);
-      font-weight:700;
-      color:var(--text);
-    }
-
-    .tab.top-level.active{
-      background:var(--primary);
-      border-color:transparent;
-      color:#111315;
-    }
-
-    .tab.active,.choice.selected,.btn.primary{
-      background:var(--primary);
-      color:#111315;
-    }
-
-    .btn.secondary{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-    }
-
-    .muted{color:var(--muted)}
-    .small{font-size:13px;color:var(--faint)}
-
-    .grid{
-      display:grid;
-      gap:16px;
-    }
-
-    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-
-    .card{padding:18px}
-
-    .match{
-      padding:16px;
-      position:relative;
-    }
-
-    .match::after{
-      content:'';
-      position:absolute;
-      left:16px;
-      right:16px;
-      bottom:0;
-      height:1px;
-      background:linear-gradient(90deg,rgba(200,169,106,.20),transparent);
-    }
-
-    .match + .match{margin-top:12px}
-    .teams{margin:8px 0 12px}
-    .choice-wrap{display:flex;gap:8px;flex-wrap:wrap}
-
-    /* === Таблицы: горизонтальный и вертикальный скролл === */
-    .table-wrap{
-      width:100%;
-      overflow-x:auto;          /* горизонтальный скролл */
-      -webkit-overflow-scrolling:touch;
-      touch-action:pan-x pan-y;
-    }
-
-    .table-scroll{
-      max-height:260px;         /* ограничиваем высоту */
-      overflow-y:auto;          /* вертикальный скролл */
-    }
-
-    .table-scroll table{
-      min-width:560px;          /* чтобы было что скроллить по X */
-    }
-
-    @media(max-width:640px){
-      .table-scroll table{
-        min-width:620px;        /* ещё шире на мобиле */
-      }
-      .table-scroll{
-        max-height:220px;
-      }
-    }
-
-    table{
-      width:max-content;
-      min-width:100%;
-      border-collapse:collapse;
-      font-size:14px;
-      table-layout:auto;
-    }
-
-    th,td{
-      padding:.72rem .55rem;
-      border-bottom:1px solid var(--border);
-      text-align:left;
-      white-space:nowrap;
-    }
-
-    th:last-child,td:last-child{
-      white-space:normal;
-    }
-
-    .rank-good{color:var(--success);font-weight:700}
-    .rank-mid{color:var(--warning);font-weight:700}
-    .rank-bad{color:var(--danger);font-weight:700}
-
-    .notice{
-      padding:14px 16px;
-      border-radius:14px;
-      background:linear-gradient(180deg,rgba(200,169,106,.12),rgba(255,255,255,.03));
-      border:1px solid rgba(200,169,106,.24);
-    }
-
-    /* Счёт */
-
-    .score-box{
-      display:grid;
-      grid-template-columns:1fr auto 1fr;
-      align-items:center;
-      gap:10px;
-    }
-
-    .score-control{
-      display:grid;
-      gap:8px;
-      justify-items:center;
-    }
-
-    .score-team{
-      font-size:13px;
-      color:var(--muted);
-      text-align:center;
-      line-height:1.25;
-    }
-
-    .score-stepper{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    .score-btn{
-      width:44px;
-      height:44px;
-      border:1px solid var(--border);
-      border-radius:14px;
-      background:var(--surface2);
-      color:var(--text);
-      font-size:24px;
-      font-weight:700;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:0;
-    }
-
-    .score-btn:active{transform:scale(.98)}
-
-    .score-input{
-      width:58px;
-      height:44px;
-      border:1px solid var(--border);
-      border-radius:14px;
-      background:var(--surface2);
-      color:var(--text);
-      padding:.4rem .2rem;
-      font-size:18px;
-      font-weight:700;
-      text-align:center;
-      -moz-appearance:textfield;
-    }
-
-    .score-input::-webkit-outer-spin-button,
-    .score-input::-webkit-inner-spin-button{
-      -webkit-appearance:none;
-      margin:0;
-    }
-
-    .score-sep{
-      color:var(--muted);
-      font-weight:700;
-      font-size:24px;
-    }
-
-    .score-preview{
-      padding:.45rem .7rem;
-      border-radius:999px;
-      background:rgba(200,169,106,.10);
-      border:1px solid rgba(200,169,106,.22);
-      grid-column:1/-1;
-      justify-self:start;
-      font-weight:600;
-      color:var(--text);
-    }
-
-    /* Брейкет */
-
-    .bracket-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(220px,1fr));
-      gap:16px;
-    }
-
-    .bracket-col{
-      display:grid;
-      gap:12px;
-    }
-
-    .bracket-card{
-      padding:14px;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:linear-gradient(180deg,rgba(200,169,106,.08),rgba(255,255,255,.02)),var(--surface);
-    }
-
-    .bracket-team{
-      padding:12px 14px;
-      border-radius:14px;
-      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),var(--surface2);
-      color:#f4efe5;
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-      margin-top:10px;
-      border:1px solid rgba(255,255,255,.08);
-      border-left:4px solid rgba(200,169,106,.34);
-      box-shadow:0 10px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
-      cursor:pointer;
-      transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease;
-    }
-
-    .bracket-team:hover{
-      transform:translateY(-2px);
-      background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03)),var(--surface2);
-      box-shadow:0 14px 24px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.07);
-    }
-
-    .bracket-team:active{
-      transform:translateY(0);
-      box-shadow:0 6px 12px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
-    }
-
-    .bracket-team.is-winner{
-      background:linear-gradient(180deg,rgba(226,196,139,.34),rgba(200,169,106,.16)),var(--surface2);
-      color:#fff8ea;
-      border-color:rgba(226,196,139,.58);
-      border-left-color:#f0d7a5;
-      box-shadow:0 0 0 1px rgba(226,196,139,.16),0 18px 30px rgba(0,0,0,.28),0 0 24px rgba(200,169,106,.14),inset 0 1px 0 rgba(255,255,255,.14);
-    }
-
-    .bracket-team.is-disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      box-shadow:none;
-    }
-
-    .bracket-team span:first-child{
-      font-weight:700;
-      letter-spacing:.01em;
-      color:inherit;
-    }
-
-    .bracket-team .winner-mark{
-      color:#ffe7b0;
-      text-shadow:0 0 10px rgba(226,196,139,.35);
-    }
-
-    .winner-mark{color:var(--success);font-weight:700}
-
-    .summary-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:16px;
-    }
-
-    .hidden{display:none!important}
-
-    @media(max-width:960px){
-      .grid-3,.grid-2,.summary-grid,.bracket-grid{
-        grid-template-columns:1fr;
-      }
-      .app{padding:12px}
-    }
-
-    @media(max-width:640px){
-      .score-box{
-        grid-template-columns:1fr;
-        justify-items:center;
-      }
-      .score-sep{display:none}
-      .score-preview{justify-self:center}
-      .match{padding:14px}
-      table{font-size:12px}
-      th,td{padding:.55rem .38rem}
-    }
+    :root{--bg:#0c1117;--surface:#121922;--surface2:#18212d;--border:rgba(255,255,255,.09);--text:#f3f1ea;--muted:#b4ad9f;--faint:#7e8591;--primary:#c8a96a;--primary2:#e2c48b;--success:#8fba7a;--warning:#d9ae57;--danger:#d27a7a;--shadow:0 18px 40px rgba(0,0,0,.34);--r:18px;--pill:999px}
+    *{box-sizing:border-box} html,body{margin:0;background:radial-gradient(circle at top,rgba(200,169,106,.16),transparent 24%),linear-gradient(180deg,#0f141b 0%,#0b1016 100%),var(--bg);color:var(--text);font-family:'Satoshi',sans-serif} body{line-height:1.5}.app{max-width:1040px;margin:0 auto;padding:16px}.panel,.match,.card{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)),var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}.panel{padding:20px;margin-bottom:16px;position:relative;overflow:hidden}.panel::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(200,169,106,.08),transparent 34%);pointer-events:none}.hero{display:grid;gap:12px}.hero h1{font-family:'Cabinet Grotesk',sans-serif;margin:0;font-size:clamp(30px,5vw,48px);letter-spacing:-.03em;text-transform:uppercase}.hero h1::after{content:''}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.tab-groups{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:20px;background:rgba(255,255,255,.025);backdrop-filter:blur(8px);margin-bottom:8px}.tab-divider{flex-basis:100%;height:0}.tab,.choice,.btn{min-height:44px;border:none;border-radius:var(--pill);padding:.75rem 1rem;background:var(--surface2);color:var(--text);cursor:pointer}.tab.top-level{background:rgba(200,169,106,.08);border:1px solid rgba(200,169,106,.24);font-weight:700;color:var(--text)}.tab.top-level.active{background:var(--primary);border-color:transparent;color:#111315}.score-box{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}.score-control{display:grid;gap:8px;justify-items:center}.score-team{font-size:13px;color:var(--muted);text-align:center;line-height:1.25}.score-stepper{display:flex;align-items:center;gap:8px}.score-btn{width:44px;height:44px;border:1px solid var(--border);border-radius:14px;background:var(--surface2);color:var(--text);font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}.score-btn:active{transform:scale(.98)}.score-input{width:58px;height:44px;border:1px solid var(--border);border-radius:14px;background:var(--surface2);color:var(--text);padding:.4rem .2rem;font-size:18px;font-weight:700;text-align:center;-moz-appearance:textfield}.score-input::-webkit-outer-spin-button,.score-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.score-sep{color:var(--muted);font-weight:700;font-size:24px}.score-preview{padding:.45rem .7rem;border-radius:999px;background:rgba(200,169,106,.10);border:1px solid rgba(200,169,106,.22);grid-column:1/-1;justify-self:start;font-weight:600;color:var(--text)}@media(max-width:640px){.score-box{grid-template-columns:1fr;justify-items:center}.score-sep{display:none}.score-preview{justify-self:center}.match{padding:14px}}.tab.active,.choice.selected,.btn.primary{background:var(--primary);color:#111315}.btn.secondary{border:1px solid var(--border);background:rgba(255,255,255,.03)}.muted{color:var(--muted)}.small{font-size:13px;color:var(--faint)}.grid{display:grid;gap:16px}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:18px}.match{padding:16px;position:relative}.match::after{content:'';position:absolute;left:16px;right:16px;bottom:0;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.20),transparent)}.match + .match{margin-top:12px}.teams{margin:8px 0 12px}.choice-wrap{display:flex;gap:8px;flex-wrap:wrap}.table-wrap{width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}.table-wrap table{min-width:560px}table{width:max-content;min-width:100%;border-collapse:collapse;font-size:14px;table-layout:auto}th,td{padding:.72rem .55rem;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}th:last-child,td:last-child{white-space:normal}.rank-good{color:var(--success);font-weight:700}.rank-mid{color:var(--warning);font-weight:700}.rank-bad{color:var(--danger);font-weight:700}.notice{padding:14px 16px;border-radius:14px;background:linear-gradient(180deg,rgba(200,169,106,.12),rgba(255,255,255,.03));border:1px solid rgba(200,169,106,.24)}@media(max-width:640px){table{font-size:12px}th,td{padding:.55rem .38rem}.table-wrap{padding-bottom:4px}.table-wrap table{min-width:620px}.rank-mid,.rank-bad,.rank-good{font-size:12px;line-height:1.2}}.bracket-grid{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:16px}.bracket-col{display:grid;gap:12px}.bracket-card{padding:14px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,rgba(200,169,106,.08),rgba(255,255,255,.02)),var(--surface)}.bracket-team{padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),var(--surface2);color:#f4efe5;display:flex;justify-content:space-between;gap:8px;margin-top:10px;border:1px solid rgba(255,255,255,.08);border-left:4px solid rgba(200,169,106,.34);box-shadow:0 10px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease}.bracket-team:hover{transform:translateY(-2px);background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03)),var(--surface2);box-shadow:0 14px 24px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.07)}.bracket-team:active{transform:translateY(0);box-shadow:0 6px 12px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05)}.bracket-team.is-winner{background:linear-gradient(180deg,rgba(226,196,139,.34),rgba(200,169,106,.16)),var(--surface2);color:#fff8ea;border-color:rgba(226,196,139,.58);border-left-color:#f0d7a5;box-shadow:0 0 0 1px rgba(226,196,139,.16),0 18px 30px rgba(0,0,0,.28),0 0 24px rgba(200,169,106,.14),inset 0 1px 0 rgba(255,255,255,.14)}.bracket-team.is-disabled{opacity:.55;cursor:not-allowed;box-shadow:none}.bracket-team span:first-child{font-weight:700;letter-spacing:.01em;color:inherit}.bracket-team .winner-mark{color:#ffe7b0;text-shadow:0 0 10px rgba(226,196,139,.35)}.winner-mark{color:var(--success);font-weight:700}.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.hidden{display:none!important}@media(max-width:960px){.grid-3,.grid-2,.summary-grid,.bracket-grid{grid-template-columns:1fr}.app{padding:12px}}
   </style>
 </head>
 <body>
 <div class="app">
   <section class="panel hero">
-    <h1>Чемпионат Мира 2026</h1>
-    <p class="muted" style="margin:0">Смартфон лучше держать горизонтально.</p>
+    <h1>World Cup Pick'em</h1>
+    <p class="muted" style="margin:0">Полная версия: групповой этап, рейтинг третьих мест, плей-офф, итоговые места, community stats и отправка прогноза на backend.</p>
   </section>
 
   <div class="tabs" id="topTabs"></div>
@@ -433,153 +29,56 @@
 <script>
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
-
 const CONFIG = window.APP_CONFIG || {};
 const BACKEND_BASE_URL = CONFIG.BACKEND_BASE_URL || '';
 const TOURNAMENT_SLUG = CONFIG.TOURNAMENT_SLUG || 'world-cup-2026-demo';
 
+
 const GROUPS = {
-  A:['Мексика','ЮАР','Южная Корея','Чехия'],
-  B:['Канада','Босния и Герцеговина','Катар','Швейцария'],
-  C:['Бразилия','Марокко','Гаити','Шотландия'],
-  D:['США','Парагвай','Австралия','Турция'],
-  E:['Германия','Кюрасао','Кот-д’Ивуар','Эквадор'],
-  F:['Нидерланды','Япония','Тунис','Швеция'],
-  G:['Бельгия','Египет','Иран','Новая Зеландия'],
-  H:['Испания','Кабо-Верде','Саудовская Аравия','Уругвай'],
-  I:['Франция','Сенегал','Норвегия','Ирак'],
-  J:['Аргентина','Алжир','Австрия','Иордания'],
-  K:['Португалия','Узбекистан','Колумбия','ДР Конго'],
-  L:['Англия','Хорватия','Гана','Панама']
+A:['Мексика','ЮАР','Южная Корея','Чехия'], B:['Канада','Босния и Герцеговина','Катар','Швейцария'], C:['Бразилия','Марокко','Гаити','Шотландия'], D:['США','Парагвай','Австралия','Турция'], E:['Германия','Кюрасао','Кот-д’Ивуар','Эквадор'], F:['Нидерланды','Япония','Тунис','Швеция'], G:['Бельгия','Египет','Иран','Новая Зеландия'], H:['Испания','Кабо-Верде','Саудовская Аравия','Уругвай'], I:['Франция','Сенегал','Норвегия','Ирак'], J:['Аргентина','Алжир','Австрия','Иордания'], K:['Португалия','Узбекистан','Колумбия','ДР Конго'], L:['Англия','Хорватия','Гана','Панама']
 };
-
-const THIRD_RULES = {
-  74:['A','B','C','D','F'],
-  77:['C','D','F','G','H'],
-  79:['C','E','F','H','I'],
-  80:['E','H','I','J','K'],
-  81:['B','E','F','I','J'],
-  82:['A','E','H','I','J'],
-  85:['E','F','G','I','J'],
-  87:['D','E','I','J','L']
-};
-
+const THIRD_RULES = {74:['A','B','C','D','F'],77:['C','D','F','G','H'],79:['C','E','F','H','I'],80:['E','H','I','J','K'],81:['B','E','F','I','J'],82:['A','E','H','I','J'],85:['E','F','G','I','J'],87:['D','E','I','J','L']};
 const PLAYOFF_DEFS = [
-  {id:73,round:'1/16 финала',left:{type:'runner',group:'A'},right:{type:'runner',group:'B'}},
-  {id:74,round:'1/16 финала',left:{type:'winner',group:'E'},right:{type:'third',groups:THIRD_RULES[74]}},
-  {id:75,round:'1/16 финала',left:{type:'winner',group:'F'},right:{type:'runner',group:'C'}},
-  {id:76,round:'1/16 финала',left:{type:'winner',group:'C'},right:{type:'runner',group:'F'}},
-  {id:77,round:'1/16 финала',left:{type:'winner',group:'I'},right:{type:'third',groups:THIRD_RULES[77]}},
-  {id:78,round:'1/16 финала',left:{type:'runner',group:'E'},right:{type:'runner',group:'I'}},
-  {id:79,round:'1/16 финала',left:{type:'winner',group:'A'},right:{type:'third',groups:THIRD_RULES[79]}},
-  {id:80,round:'1/16 финала',left:{type:'winner',group:'L'},right:{type:'third',groups:THIRD_RULES[80]}},
-  {id:81,round:'1/16 финала',left:{type:'winner',group:'D'},right:{type:'third',groups:THIRD_RULES[81]}},
-  {id:82,round:'1/16 финала',left:{type:'winner',group:'G'},right:{type:'third',groups:THIRD_RULES[82]}},
-  {id:83,round:'1/16 финала',left:{type:'runner',group:'K'},right:{type:'runner',group:'L'}},
-  {id:84,round:'1/16 финала',left:{type:'winner',group:'H'},right:{type:'runner',group:'J'}},
-  {id:85,round:'1/16 финала',left:{type:'winner',group:'B'},right:{type:'third',groups:THIRD_RULES[85]}},
-  {id:86,round:'1/16 финала',left:{type:'winner',group:'J'},right:{type:'runner',group:'H'}},
-  {id:87,round:'1/16 финала',left:{type:'winner',group:'K'},right:{type:'third',groups:THIRD_RULES[87]}},
-  {id:88,round:'1/16 финала',left:{type:'runner',group:'D'},right:{type:'runner',group:'G'}},
-
-  {id:89,round:'1/8 финала',left:{type:'match',match:74},right:{type:'match',match:77}},
-  {id:90,round:'1/8 финала',left:{type:'match',match:73},right:{type:'match',match:75}},
-  {id:91,round:'1/8 финала',left:{type:'match',match:76},right:{type:'match',match:78}},
-  {id:92,round:'1/8 финала',left:{type:'match',match:79},right:{type:'match',match:80}},
-  {id:93,round:'1/8 финала',left:{type:'match',match:83},right:{type:'match',match:84}},
-  {id:94,round:'1/8 финала',left:{type:'match',match:81},right:{type:'match',match:82}},
-  {id:95,round:'1/8 финала',left:{type:'match',match:86},right:{type:'match',match:88}},
-  {id:96,round:'1/8 финала',left:{type:'match',match:85},right:{type:'match',match:87}},
-
-  {id:97,round:'Четвертьфинал',left:{type:'match',match:89},right:{type:'match',match:90}},
-  {id:98,round:'Четвертьфинал',left:{type:'match',match:93},right:{type:'match',match:94}},
-  {id:99,round:'Четвертьфинал',left:{type:'match',match:91},right:{type:'match',match:92}},
-  {id:100,round:'Четвертьфинал',left:{type:'match',match:95},right:{type:'match',match:96}},
-
-  {id:101,round:'Полуфинал',left:{type:'match',match:97},right:{type:'match',match:98}},
-  {id:102,round:'Полуфинал',left:{type:'match',match:99},right:{type:'match',match:100}},
-  {id:103,round:'Матч за 3-е место',left:{type:'loser',match:101},right:{type:'loser',match:102}},
-  {id:104,round:'Финал',left:{type:'match',match:101},right:{type:'match',match:102}}
+{id:73,round:'1/16 финала',left:{type:'runner',group:'A'},right:{type:'runner',group:'B'}},{id:74,round:'1/16 финала',left:{type:'winner',group:'E'},right:{type:'third',groups:THIRD_RULES[74]}},{id:75,round:'1/16 финала',left:{type:'winner',group:'F'},right:{type:'runner',group:'C'}},{id:76,round:'1/16 финала',left:{type:'winner',group:'C'},right:{type:'runner',group:'F'}},{id:77,round:'1/16 финала',left:{type:'winner',group:'I'},right:{type:'third',groups:THIRD_RULES[77]}},{id:78,round:'1/16 финала',left:{type:'runner',group:'E'},right:{type:'runner',group:'I'}},{id:79,round:'1/16 финала',left:{type:'winner',group:'A'},right:{type:'third',groups:THIRD_RULES[79]}},{id:80,round:'1/16 финала',left:{type:'winner',group:'L'},right:{type:'third',groups:THIRD_RULES[80]}},{id:81,round:'1/16 финала',left:{type:'winner',group:'D'},right:{type:'third',groups:THIRD_RULES[81]}},{id:82,round:'1/16 финала',left:{type:'winner',group:'G'},right:{type:'third',groups:THIRD_RULES[82]}},{id:83,round:'1/16 финала',left:{type:'runner',group:'K'},right:{type:'runner',group:'L'}},{id:84,round:'1/16 финала',left:{type:'winner',group:'H'},right:{type:'runner',group:'J'}},{id:85,round:'1/16 финала',left:{type:'winner',group:'B'},right:{type:'third',groups:THIRD_RULES[85]}},{id:86,round:'1/16 финала',left:{type:'winner',group:'J'},right:{type:'runner',group:'H'}},{id:87,round:'1/16 финала',left:{type:'winner',group:'K'},right:{type:'third',groups:THIRD_RULES[87]}},{id:88,round:'1/16 финала',left:{type:'runner',group:'D'},right:{type:'runner',group:'G'}},
+{id:89,round:'1/8 финала',left:{type:'match',match:74},right:{type:'match',match:77}},{id:90,round:'1/8 финала',left:{type:'match',match:73},right:{type:'match',match:75}},{id:91,round:'1/8 финала',left:{type:'match',match:76},right:{type:'match',match:78}},{id:92,round:'1/8 финала',left:{type:'match',match:79},right:{type:'match',match:80}},{id:93,round:'1/8 финала',left:{type:'match',match:83},right:{type:'match',match:84}},{id:94,round:'1/8 финала',left:{type:'match',match:81},right:{type:'match',match:82}},{id:95,round:'1/8 финала',left:{type:'match',match:86},right:{type:'match',match:88}},{id:96,round:'1/8 финала',left:{type:'match',match:85},right:{type:'match',match:87}},
+{id:97,round:'Четвертьфинал',left:{type:'match',match:89},right:{type:'match',match:90}},{id:98,round:'Четвертьфинал',left:{type:'match',match:93},right:{type:'match',match:94}},{id:99,round:'Четвертьфинал',left:{type:'match',match:91},right:{type:'match',match:92}},{id:100,round:'Четвертьфинал',left:{type:'match',match:95},right:{type:'match',match:96}},
+{id:101,round:'Полуфинал',left:{type:'match',match:97},right:{type:'match',match:98}},{id:102,round:'Полуфинал',left:{type:'match',match:99},right:{type:'match',match:100}},{id:103,round:'Матч за 3-е место',left:{type:'loser',match:101},right:{type:'loser',match:102}},{id:104,round:'Финал',left:{type:'match',match:101},right:{type:'match',match:102}}
 ];
-
-const ROUND_ORDER = [
-  '1/16 финала',
-  '1/8 финала',
-  'Четвертьфинал',
-  'Полуфинал',
-  'Матч за 3-е место',
-  'Финал'
-];
-
-const state = {
-  currentView:'groups',
-  currentGroup:'A',
-  groupMatches:{},
-  groupFairPlay:{},
-  fairPlayOpen:{},
-  playoffPicks:{},
-  community:[]
-};
-
+const ROUND_ORDER = ['1/16 финала','1/8 финала','Четвертьфинал','Полуфинал','Матч за 3-е место','Финал'];
+const state = { currentView:'groups', currentGroup:'A', groupMatches:{}, groupFairPlay:{}, fairPlayOpen:{}, playoffPicks:{}, community:[] };
 const groupMatchIndex = {};
-
 Object.entries(GROUPS).forEach(([group, teams]) => {
   groupMatchIndex[group] = [];
-  for (let i=0;i<teams.length;i++){
-    for (let j=i+1;j<teams.length;j++){
-      const id = `${group}-${i}-${j}`;
-      state.groupMatches[id] = {home:0, away:0};
-      groupMatchIndex[group].push({
-        id,
-        home:teams[i],
-        away:teams[j],
-        homeIndex:i,
-        awayIndex:j,
-        group
-      });
-    }
+  for (let i=0;i<teams.length;i++) for (let j=i+1;j<teams.length;j++) {
+    const id = `${group}-${i}-${j}`;
+    state.groupMatches[id] = {home:0, away:0};
+    groupMatchIndex[group].push({ id, home:teams[i], away:teams[j], homeIndex:i, awayIndex:j, group });
   }
 });
-
 function normalizeScore(score){
   return {
-    home: Number.isFinite(Number(score?.home))
-      ? Math.max(0, Math.min(20, Number(score.home)))
-      : 0,
-    away: Number.isFinite(Number(score?.away))
-      ? Math.max(0, Math.min(20, Number(score.away)))
-      : 0
+    home: Number.isFinite(Number(score?.home)) ? Math.max(0, Math.min(20, Number(score.home))) : 0,
+    away: Number.isFinite(Number(score?.away)) ? Math.max(0, Math.min(20, Number(score.away))) : 0
   };
 }
-
 function scoreResult(score){
   if(score.home>score.away) return 'home';
   if(score.home<score.away) return 'away';
   return 'draw';
 }
-
 function fairPlayEntry(matchId){
   const raw = state.groupFairPlay[matchId] || {};
   const normalizeSide = side => ({
-    yellow: Number.isFinite(Number(raw?.[side]?.yellow))
-      ? Math.max(0, Math.min(10, Number(raw[side].yellow)))
-      : 0,
-    red: ['none','indirect','direct','yellow_direct'].includes(raw?.[side]?.red)
-      ? raw[side].red
-      : 'none'
+    yellow: Number.isFinite(Number(raw?.[side]?.yellow)) ? Math.max(0, Math.min(10, Number(raw[side].yellow))) : 0,
+    red: ['none','indirect','direct','yellow_direct'].includes(raw?.[side]?.red) ? raw[side].red : 'none'
   });
-  return {
-    home: normalizeSide('home'),
-    away: normalizeSide('away')
-  };
+  return { home: normalizeSide('home'), away: normalizeSide('away') };
 }
-
 function fairPlayPenalty(side){
   const yellow = Math.max(0, Number(side?.yellow) || 0);
-  const redMap = { none:0, indirect:3, direct:4, yellow_direct:5 };
+  const redMap = { none: 0, indirect: 3, direct: 4, yellow_direct: 5 };
   return yellow + (redMap[side?.red] || 0);
 }
-
 function teamConductTotals(group){
   const totals = Object.fromEntries(GROUPS[group].map(name => [name, 0]));
   groupMatchIndex[group].forEach(match => {
@@ -589,40 +88,28 @@ function teamConductTotals(group){
   });
   return totals;
 }
-
 function baseGroupComparator(a,b){
-  return (
-    b.pts-a.pts ||
-    b.gd-a.gd ||
-    b.gf-a.gf ||
-    b.conduct-a.conduct ||
-    a.team.localeCompare(b.team,'ru')
-  );
+  return b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||b.conduct-a.conduct||a.team.localeCompare(b.team,'ru');
 }
-
 function miniStandingsForTeams(group, teamNames){
   const allowed = new Set(teamNames);
-  const mini = teamNames.map(name => ({
-    team:name, pts:0, gf:0, ga:0, gd:0
-  }));
-  const byName = Object.fromEntries(mini.map(t => [t.team,t]));
+  const mini = teamNames.map(name => ({team:name,pts:0,gf:0,ga:0,gd:0}));
+  const byName = Object.fromEntries(mini.map(t=>[t.team,t]));
   groupMatchIndex[group].forEach(match => {
     const home = GROUPS[group][match.homeIndex];
     const away = GROUPS[group][match.awayIndex];
     if(!allowed.has(home) || !allowed.has(away)) return;
     const score = normalizeScore(state.groupMatches[match.id]);
-    const h = byName[home];
-    const a = byName[away];
+    const h = byName[home], a = byName[away];
     h.gf += score.home; h.ga += score.away;
     a.gf += score.away; a.ga += score.home;
     if (score.home > score.away){ h.pts += 3; }
     else if (score.home < score.away){ a.pts += 3; }
     else { h.pts += 1; a.pts += 1; }
   });
-  mini.forEach(t => t.gd = t.gf - t.ga);
+  mini.forEach(t=>t.gd=t.gf-t.ga);
   return byName;
 }
-
 function applyHeadToHeadForGroup(group, teams){
   let ordered = [...teams].sort(baseGroupComparator);
   let changed = true;
@@ -634,19 +121,12 @@ function applyHeadToHeadForGroup(group, teams){
       while(j < ordered.length && ordered[j].pts === ordered[i].pts) j++;
       const tied = ordered.slice(i, j);
       if(tied.length > 1){
-        const mini = miniStandingsForTeams(group, tied.map(t => t.team));
-        const resolved = [...tied].sort((a,b) => {
+        const mini = miniStandingsForTeams(group, tied.map(t=>t.team));
+        const resolved = [...tied].sort((a,b)=>{
           const ma = mini[a.team], mb = mini[b.team];
-          return (
-            mb.pts-ma.pts ||
-            mb.gd-ma.gd ||
-            mb.gf-ma.gf ||
-            baseGroupComparator(a,b)
-          );
+          return mb.pts-ma.pts||mb.gd-ma.gd||mb.gf-ma.gf||baseGroupComparator(a,b);
         });
-        if(resolved.some((team, idx) => team.team !== tied[idx].team)){
-          changed = true;
-        }
+        if(resolved.some((team, idx) => team.team !== tied[idx].team)) changed = true;
         next.push(...resolved);
       } else {
         next.push(...tied);
@@ -657,640 +137,109 @@ function applyHeadToHeadForGroup(group, teams){
   }
   return ordered;
 }
-
 function standingsForGroup(group){
   const conduct = teamConductTotals(group);
-  const teams = GROUPS[group].map(name => ({
-    team:name, pts:0, gf:0, ga:0, gd:0,
-    w:0, d:0, l:0, group, conduct:-conduct[name]
-  }));
+  const teams = GROUPS[group].map(name => ({team:name,pts:0,gf:0,ga:0,gd:0,w:0,d:0,l:0,group,conduct:-conduct[name]}));
   groupMatchIndex[group].forEach(match => {
     const score = normalizeScore(state.groupMatches[match.id]);
-    const h = teams[match.homeIndex];
-    const a = teams[match.awayIndex];
+    const h = teams[match.homeIndex], a = teams[match.awayIndex];
     h.gf += score.home; h.ga += score.away;
     a.gf += score.away; a.ga += score.home;
-    if (score.home > score.away){
-      h.pts += 3; h.w += 1; a.l += 1;
-    } else if (score.home < score.away){
-      a.pts += 3; a.w += 1; h.l += 1;
-    } else {
-      h.pts += 1; a.pts += 1; h.d += 1; a.d += 1;
-    }
+    if (score.home > score.away){ h.pts += 3; h.w += 1; a.l += 1; }
+    else if (score.home < score.away){ a.pts += 3; a.w += 1; h.l += 1; }
+    else { h.pts += 1; a.pts += 1; h.d += 1; a.d += 1; }
   });
-  teams.forEach(t => t.gd = t.gf - t.ga);
+  teams.forEach(t=>t.gd=t.gf-t.ga);
   const ranked = applyHeadToHeadForGroup(group, teams);
-  return ranked.map((t,i) => ({...t, rank:i+1}));
+  return ranked.map((t,i)=>({...t,rank:i+1}));
 }
-
-function allStandings(){
-  const out = {};
-  Object.keys(GROUPS).forEach(g => out[g] = standingsForGroup(g));
-  return out;
-}
-
-function thirdPlaces(standings){
-  const rows = Object.entries(standings)
-    .map(([g,t]) => ({...t[2], group:g}));
-  rows.sort((a,b) =>
-    b.pts-a.pts ||
-    b.gd-a.gd ||
-    b.gf-a.gf ||
-    b.conduct-a.conduct ||
-    a.team.localeCompare(b.team,'ru')
-  );
-  return rows.map((r,i) => ({
-    ...r,
-    overallRank:i+1,
-    qualified:i<8
-  }));
-}
-
-function resolveSlot(slot, ctx){
-  if(slot.type==='winner') return ctx.standings[slot.group][0].team;
-  if(slot.type==='runner') return ctx.standings[slot.group][1].team;
-  if(slot.type==='third'){
-    let idx = ctx.availableThirds.findIndex(
-      t => t.qualified && slot.groups.includes(t.group)
-    );
-    if(idx===-1) idx = ctx.availableThirds.findIndex(t => t.qualified);
-    if(idx===-1) return 'TBD';
-    const c = ctx.availableThirds[idx];
-    ctx.availableThirds.splice(idx,1);
-    return c.team;
-  }
-  if(slot.type==='match') return ctx.winners[slot.match] || 'TBD';
-  if(slot.type==='loser') return ctx.losers[slot.match] || 'TBD';
-  return 'TBD';
-}
-
-function computeBracket(){
-  const standings = allStandings();
-  const thirds = thirdPlaces(standings);
-  const ctx = {
-    standings,
-    thirds,
-    availableThirds: thirds.filter(t => t.qualified).map(t => ({...t})),
-    winners:{},
-    losers:{}
-  };
-  const matches = PLAYOFF_DEFS.map(def => {
-    const home = resolveSlot(def.left, ctx);
-    const away = resolveSlot(def.right, ctx);
-    let winner = state.playoffPicks[def.id] || null;
-    if(winner && winner!==home && winner!==away) winner = null;
-    if(winner){
-      ctx.winners[def.id] = winner;
-      ctx.losers[def.id] = winner===home ? away : home;
-    }
-    return {...def, home, away, winner};
-  });
-  return {standings, thirds, matches};
-}
-
-function safeCleanup(){
-  const {matches} = computeBracket();
-  matches.forEach(m => {
-    const w = state.playoffPicks[m.id];
-    if(w && w!==m.home && w!==m.away) delete state.playoffPicks[m.id];
-  });
-}
-
-function renderTabs(){
-  const tabs = document.getElementById('topTabs');
-  tabs.innerHTML = '';
-
-  const topRow = document.createElement('div');
-  topRow.className = 'tab-groups';
-
-  [
-    {id:'groups', label:'Группы'},
-    {id:'playoff', label:'Плей-офф'},
-    {id:'results', label:'Итог'}
-  ].forEach(t => {
-    const b = document.createElement('button');
-    b.className = `tab top-level ${state.currentView===t.id?'active':''}`;
-    b.textContent = t.label;
-    b.onclick = () => { state.currentView = t.id; render(); };
-    topRow.appendChild(b);
-  });
-
-  tabs.appendChild(topRow);
-
-  if(state.currentView==='groups'){
-    const groupRow = document.createElement('div');
-    groupRow.className = 'tab-groups';
-    Object.keys(GROUPS).forEach(g => {
-      const b = document.createElement('button');
-      b.className = `tab ${state.currentGroup===g?'active':''}`;
-      b.textContent = `Группа ${g}`;
-      b.onclick = () => { state.currentGroup = g; render(); };
-      groupRow.appendChild(b);
-    });
-    tabs.appendChild(groupRow);
-  }
-}
-
-function renderGroups(){
-  const wrap = document.getElementById('groupsView');
-  const standings = allStandings();
-  const thirds = thirdPlaces(standings);
-  const matches = groupMatchIndex[state.currentGroup];
-
-  wrap.innerHTML = `
-    <h2 style="margin-top:0">Групповой этап</h2>
-    <p class="muted">
-      Выбирай точный счёт. Таблица учитывает личные встречи между командами
-      с равными очками, при полном равенстве учитывает карточки и fair play по правилам FIFA.
-      Рейтинг третьих мест тоже учитывает fair play.
-    </p>
-    <div id="groupMatchList"></div>
-    <div class="grid grid-2" style="margin-top:16px">
-      <div class="card">
-        <h3 style="margin-top:0">Таблица группы ${state.currentGroup}</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Команда</th>
-                  <th>О</th>
-                  <th>В</th>
-                  <th>Н</th>
-                  <th>П</th>
-                  <th>ЗМ</th>
-                  <th>ПМ</th>
-                  <th>РМ</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${standings[state.currentGroup].map(t => `
-                  <tr>
-                    <td class="${t.rank<3?'rank-good':''}">${t.rank}</td>
-                    <td>${t.team}</td>
-                    <td>${t.pts}</td>
-                    <td>${t.w}</td>
-                    <td>${t.d}</td>
-                    <td>${t.l}</td>
-                    <td>${t.gf}</td>
-                    <td>${t.ga}</td>
-                    <td>${t.gd}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">Рейтинг третьих мест</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Группа</th>
-                  <th>Команда</th>
-                  <th>О</th>
-                  <th>РМ</th>
-                  <th>ЗМ</th>
-                  <th>FP</th>
-                  <th>Статус</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${thirds.map(t => `
-                  <tr>
-                    <td>${t.overallRank}</td>
-                    <td>${t.group}</td>
-                    <td>${t.team}</td>
-                    <td>${t.pts}</td>
-                    <td>${t.gd}</td>
-                    <td>${t.gf}</td>
-                    <td>${t.conduct}</td>
-                    <td class="${t.qualified?'rank-mid':'rank-bad'}">
-                      ${t.qualified?'Проходит':'Вылетает'}
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const list = wrap.querySelector('#groupMatchList');
-
-  matches.forEach((m,idx)=>{
-    const el = document.createElement('div');
-    el.className = 'match';
-    const current = normalizeScore(state.groupMatches[m.id]);
-    const result = scoreResult(current);
-
-    el.innerHTML = `
-      <strong>Матч ${idx+1}</strong>
-      <div class="teams">${m.home} — ${m.away}</div>
-      <div class="score-box">
-        <div class="score-control">
-          <div class="score-team">${m.home}</div>
-          <div class="score-stepper">
-            <button class="score-btn" data-side="home" data-action="minus"
-              aria-label="Уменьшить голы ${m.home}">−</button>
-            <input class="score-input" data-side="home"
-              type="number" min="0" max="20" step="1" value="${current.home}">
-            <button class="score-btn" data-side="home" data-action="plus"
-              aria-label="Увеличить голы ${m.home}">+</button>
-          </div>
-        </div>
-        <span class="score-sep">:</span>
-        <div class="score-control">
-          <div class="score-team">${m.away}</div>
-          <div class="score-stepper">
-            <button class="score-btn" data-side="away" data-action="minus"
-              aria-label="Уменьшить голы ${m.away}">−</button>
-            <input class="score-input" data-side="away"
-              type="number" min="0" max="20" step="1" value="${current.away}">
-            <button class="score-btn" data-side="away" data-action="plus"
-              aria-label="Увеличить голы ${m.away}">+</button>
-          </div>
-        </div>
-        <span class="score-preview small">
-          ${
-            result==='home'
-              ? m.home+' побеждает'
-              : result==='away'
-              ? m.away+' побеждает'
-              : 'Ничья'
-          }
-        </span>
-      </div>
-      <button class="btn secondary fairplay-toggle" type="button" style="margin-top:10px">
-        Доп. критерии: карточки / fair play
-      </button>
-      <div class="fairplay-panel hidden" style="margin-top:10px;display:grid;gap:10px"></div>
-    `;
-
-    const applyScore = (side,value)=>{
-      const next = normalizeScore(state.groupMatches[m.id]);
-      next[side] = Math.max(0,Math.min(20,value));
-      state.groupMatches[m.id] = normalizeScore(next);
-      safeCleanup();
-      render();
-    };
-
+function allStandings(){ const out={}; Object.keys(GROUPS).forEach(g=>out[g]=standingsForGroup(g)); return out; }
+function thirdPlaces(standings){ const rows=Object.entries(standings).map(([g,t])=>({...t[2],group:g})); rows.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||b.conduct-a.conduct||a.team.localeCompare(b.team,'ru')); return rows.map((r,i)=>({...r,overallRank:i+1,qualified:i<8})); }
+function resolveSlot(slot, ctx){ if(slot.type==='winner') return ctx.standings[slot.group][0].team; if(slot.type==='runner') return ctx.standings[slot.group][1].team; if(slot.type==='third'){ let idx=ctx.availableThirds.findIndex(t=>t.qualified&&slot.groups.includes(t.group)); if(idx===-1) idx=ctx.availableThirds.findIndex(t=>t.qualified); if(idx===-1) return 'TBD'; const c=ctx.availableThirds[idx]; ctx.availableThirds.splice(idx,1); return c.team; } if(slot.type==='match') return ctx.winners[slot.match]||'TBD'; if(slot.type==='loser') return ctx.losers[slot.match]||'TBD'; return 'TBD'; }
+function computeBracket(){ const standings=allStandings(); const thirds=thirdPlaces(standings); const ctx={standings,thirds,availableThirds:thirds.filter(t=>t.qualified).map(t=>({...t})),winners:{},losers:{}}; const matches=PLAYOFF_DEFS.map(def=>{ const home=resolveSlot(def.left,ctx); const away=resolveSlot(def.right,ctx); let winner=state.playoffPicks[def.id]||null; if(winner&&winner!==home&&winner!==away) winner=null; if(winner){ctx.winners[def.id]=winner;ctx.losers[def.id]=winner===home?away:home;} return {...def,home,away,winner}; }); return {standings,thirds,matches}; }
+function safeCleanup(){ const {matches}=computeBracket(); matches.forEach(m=>{ const w=state.playoffPicks[m.id]; if(w&&w!==m.home&&w!==m.away) delete state.playoffPicks[m.id]; }); }
+function renderTabs(){ const tabs=document.getElementById('topTabs'); tabs.innerHTML=''; const topRow=document.createElement('div'); topRow.className='tab-groups'; [{id:'groups',label:'Группы'},{id:'playoff',label:'Плей-офф'},{id:'results',label:'Итог'}].forEach(t=>{ const b=document.createElement('button'); b.className=`tab top-level ${state.currentView===t.id?'active':''}`; b.textContent=t.label; b.onclick=()=>{state.currentView=t.id; render();}; topRow.appendChild(b); }); tabs.appendChild(topRow); if(state.currentView==='groups'){ const groupRow=document.createElement('div'); groupRow.className='tab-groups'; Object.keys(GROUPS).forEach(g=>{ const b=document.createElement('button'); b.className=`tab ${state.currentGroup===g?'active':''}`; b.textContent=`Группа ${g}`; b.onclick=()=>{state.currentGroup=g; render();}; groupRow.appendChild(b); }); tabs.appendChild(groupRow); } }
+function renderGroups(){ const wrap=document.getElementById('groupsView'); const standings=allStandings(); const thirds=thirdPlaces(standings); const matches=groupMatchIndex[state.currentGroup]; wrap.innerHTML=`<h2 style="margin-top:0">Групповой этап</h2><p class="muted">Теперь ты выбираешь точный счёт каждого матча. Таблица группы учитывает личные встречи между командами с равными очками, а при полном равенстве можно использовать карточки и fair play по правилам FIFA. Рейтинг третьих мест тоже учитывает fair play.</p><div id="groupMatchList"></div><div class="grid grid-2" style="margin-top:16px"><div class="card"><h3 style="margin-top:0">Таблица группы ${state.currentGroup}</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>Команда</th><th>О</th><th>В</th><th>Н</th><th>П</th><th>ЗМ</th><th>ПМ</th><th>РМ</th></tr></thead><tbody>${standings[state.currentGroup].map(t=>`<tr><td class="${t.rank<3?'rank-good':''}">${t.rank}</td><td>${t.team}</td><td>${t.pts}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}</td><td>${t.ga}</td><td>${t.gd}</td></tr>`).join('')}</tbody></table></div></div><div class="card"><h3 style="margin-top:0">Рейтинг третьих мест</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>Группа</th><th>Команда</th><th>О</th><th>РМ</th><th>ЗМ</th><th>FP</th><th>Статус</th></tr></thead><tbody>${thirds.map(t=>`<tr><td>${t.overallRank}</td><td>${t.group}</td><td>${t.team}</td><td>${t.pts}</td><td>${t.gd}</td><td>${t.gf}</td><td>${t.conduct}</td><td class="${t.qualified?'rank-mid':'rank-bad'}">${t.qualified?'Проходит':'Вылетает'}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+  const list=wrap.querySelector('#groupMatchList');
+  matches.forEach((m,idx)=>{ const el=document.createElement('div'); el.className='match'; const current=normalizeScore(state.groupMatches[m.id]); const result=scoreResult(current); el.innerHTML=`<strong>Матч ${idx+1}</strong><div class="teams">${m.home} — ${m.away}</div><div class="score-box"><div class="score-control"><div class="score-team">${m.home}</div><div class="score-stepper"><button class="score-btn" data-side="home" data-action="minus" aria-label="Уменьшить голы ${m.home}">−</button><input class="score-input" data-side="home" type="number" min="0" max="20" step="1" value="${current.home}"><button class="score-btn" data-side="home" data-action="plus" aria-label="Увеличить голы ${m.home}">+</button></div></div><span class="score-sep">:</span><div class="score-control"><div class="score-team">${m.away}</div><div class="score-stepper"><button class="score-btn" data-side="away" data-action="minus" aria-label="Уменьшить голы ${m.away}">−</button><input class="score-input" data-side="away" type="number" min="0" max="20" step="1" value="${current.away}"><button class="score-btn" data-side="away" data-action="plus" aria-label="Увеличить голы ${m.away}">+</button></div></div><span class="score-preview small">${result==='home'?m.home+' побеждает':result==='away'?m.away+' побеждает':'Ничья'}</span></div><button class="btn secondary fairplay-toggle" type="button" style="margin-top:10px">Доп. критерии: карточки / fair play</button><div class="fairplay-panel hidden" style="margin-top:10px;display:grid;gap:10px"></div>`;
+    const applyScore=(side,value)=>{ const next=normalizeScore(state.groupMatches[m.id]); next[side]=Math.max(0,Math.min(20,value)); state.groupMatches[m.id]=normalizeScore(next); safeCleanup(); render(); };
     const fairPlay = fairPlayEntry(m.id);
     const fpPanel = el.querySelector('.fairplay-panel');
     if(state.fairPlayOpen[m.id]) fpPanel.classList.remove('hidden');
-
     fpPanel.innerHTML = [
       { key:'home', name:m.home, data:fairPlay.home },
       { key:'away', name:m.away, data:fairPlay.away }
     ].map(side => `
       <div class="card" style="padding:12px">
-        <div style="margin-bottom:8px;font-weight:700;color:var(--text);font-size:14px">
-          ${side.name}
-        </div>
+        <div style="margin-bottom:8px;font-weight:700;color:var(--text);font-size:14px">${side.name}</div>
         <div class="row" style="gap:10px;flex-wrap:wrap">
-          <div class="small">
-            Жёлтые карточки
-            <div class="score-stepper" style="margin-top:6px">
-              <button class="score-btn fairplay-btn"
-                data-side="${side.key}" data-action="minus"
-                aria-label="Уменьшить жёлтые карточки ${side.name}">−</button>
-              <input class="score-input fairplay-yellow"
-                data-side="${side.key}" type="number"
-                min="0" max="10" step="1" value="${side.data.yellow}">
-              <button class="score-btn fairplay-btn"
-                data-side="${side.key}" data-action="plus"
-                aria-label="Увеличить жёлтые карточки ${side.name}">+</button>
-            </div>
-          </div>
-          <div class="small">
-            Удаление
-            <div class="choice-wrap" style="margin-top:6px">
-              ${[
-                {value:'none',label:'—',title:'Нет удаления'},
-                {value:'indirect',label:'2Ж',title:'Вторая жёлтая'},
-                {value:'direct',label:'К',title:'Прямая красная'},
-                {value:'yellow_direct',label:'Ж+К',title:'Жёлтая + прямая красная'}
-              ].map(opt => `
-                <button type="button" title="${opt.title}" aria-label="${opt.title}"
-                  class="choice fairplay-red-btn ${side.data.red===opt.value?'selected':''}"
-                  data-side="${side.key}" data-red="${opt.value}"
-                  style="min-width:44px;padding:.65rem .8rem">
-                  ${opt.label}
-                </button>
-              `).join('')}
-            </div>
-          </div>
+          <div class="small">Жёлтые карточки<div class="score-stepper" style="margin-top:6px"><button class="score-btn fairplay-btn" data-side="${side.key}" data-action="minus" aria-label="Уменьшить жёлтые карточки ${side.name}">−</button><input class="score-input fairplay-yellow" data-side="${side.key}" type="number" min="0" max="10" step="1" value="${side.data.yellow}"><button class="score-btn fairplay-btn" data-side="${side.key}" data-action="plus" aria-label="Увеличить жёлтые карточки ${side.name}">+</button></div></div>
+          <div class="small">Удаление<div class="choice-wrap" style="margin-top:6px">${[{value:'none',label:'—',title:'Нет удаления'},{value:'indirect',label:'2Ж',title:'Вторая жёлтая'},{value:'direct',label:'К',title:'Прямая красная'},{value:'yellow_direct',label:'Ж+К',title:'Жёлтая + прямая красная'}].map(opt=>`<button type="button" title="${opt.title}" aria-label="${opt.title}" class="choice fairplay-red-btn ${side.data.red===opt.value?'selected':''}" data-side="${side.key}" data-red="${opt.value}" style="min-width:44px;padding:.65rem .8rem">${opt.label}</button>`).join('')}</div></div>
           <span class="small muted">FP: ${-fairPlayPenalty(side.data)}</span>
         </div>
       </div>
     `).join('');
-
-    el.querySelector('.fairplay-toggle')
-      .addEventListener('click',()=>{
-        fpPanel.classList.toggle('hidden');
-        state.fairPlayOpen[m.id] = !fpPanel.classList.contains('hidden');
-      });
-
+    el.querySelector('.fairplay-toggle').addEventListener('click',()=>{ fpPanel.classList.toggle('hidden'); state.fairPlayOpen[m.id]=!fpPanel.classList.contains('hidden'); });
     const applyFairPlay = (side, patch)=>{
       const currentFp = fairPlayEntry(m.id);
-      state.groupFairPlay[m.id] = {
-        home:{...currentFp.home},
-        away:{...currentFp.away}
-      };
-      state.groupFairPlay[m.id][side] = {
-        ...state.groupFairPlay[m.id][side],
-        ...patch
-      };
+      state.groupFairPlay[m.id] = { home:{...currentFp.home}, away:{...currentFp.away} };
+      state.groupFairPlay[m.id][side] = { ...state.groupFairPlay[m.id][side], ...patch };
       safeCleanup();
       render();
     };
-
-    el.querySelectorAll('.score-input').forEach(inp=>{
-      if(inp.classList.contains('fairplay-yellow')) return;
-      inp.addEventListener('input',e=>{
-        const raw = e.target.value;
-        applyScore(e.target.dataset.side, raw===''?0:Number(raw));
-      });
-    });
-
-    el.querySelectorAll('.score-btn').forEach(btn=>{
-      if(btn.classList.contains('fairplay-btn')) return;
-      btn.addEventListener('click',()=>{
-        const side = btn.dataset.side;
-        const currentScore = normalizeScore(state.groupMatches[m.id]);
-        const delta = btn.dataset.action==='plus'?1:-1;
-        applyScore(side, currentScore[side]+delta);
-      });
-    });
-
-    el.querySelectorAll('.fairplay-yellow')
-      .forEach(inp=>inp.addEventListener('input',e=>{
-        applyFairPlay(e.target.dataset.side,{
-          yellow:Math.max(0,Math.min(10,Number(e.target.value)||0))
-        });
-      }));
-
-    el.querySelectorAll('.fairplay-btn')
-      .forEach(btn=>btn.addEventListener('click',()=>{
-        const side = btn.dataset.side;
-        const currentFp = fairPlayEntry(m.id);
-        const delta = btn.dataset.action==='plus'?1:-1;
-        applyFairPlay(side,{
-          yellow:Math.max(0,Math.min(10,currentFp[side].yellow+delta))
-        });
-      }));
-
-    el.querySelectorAll('.fairplay-red-btn')
-      .forEach(btn=>btn.addEventListener('click',()=>{
-        applyFairPlay(btn.dataset.side,{red:btn.dataset.red});
-      }));
-
-    list.appendChild(el);
-  });
+    el.querySelectorAll('.score-input').forEach(inp=>{ if(inp.classList.contains('fairplay-yellow') || inp.classList.contains('fairplay-red')) return; inp.addEventListener('input',e=>{ const raw=e.target.value; applyScore(e.target.dataset.side, raw===''?0:Number(raw)); }); });
+    el.querySelectorAll('.score-btn').forEach(btn=>{ if(btn.classList.contains('fairplay-btn')) return; btn.addEventListener('click',()=>{ const side=btn.dataset.side; const currentScore=normalizeScore(state.groupMatches[m.id]); const delta=btn.dataset.action==='plus'?1:-1; applyScore(side, currentScore[side]+delta); }); });
+    el.querySelectorAll('.fairplay-yellow').forEach(inp=>inp.addEventListener('input',e=>applyFairPlay(e.target.dataset.side,{yellow:Math.max(0,Math.min(10,Number(e.target.value)||0))})));
+    el.querySelectorAll('.fairplay-btn').forEach(btn=>btn.addEventListener('click',()=>{ const side=btn.dataset.side; const currentFp=fairPlayEntry(m.id); const delta=btn.dataset.action==='plus'?1:-1; applyFairPlay(side,{yellow:Math.max(0,Math.min(10,currentFp[side].yellow+delta))}); }));
+    el.querySelectorAll('.fairplay-red-btn').forEach(btn=>btn.addEventListener('click',()=>applyFairPlay(btn.dataset.side,{red:btn.dataset.red})));
+    list.appendChild(el); });
 }
-
-function renderPlayoff(){
-  const wrap = document.getElementById('playoffView');
-  const {thirds,matches} = computeBracket();
-
-  wrap.innerHTML = `
-    <h2 style="margin-top:0">Плей-офф</h2>
-    <p class="muted"></p>
-    <div class="notice">
-      8 лучших третьих мест сейчас:
-      ${thirds.filter(t=>t.qualified).map(t=>`${t.team} (${t.group})`).join(', ')}
-    </div>
-    <div class="bracket-grid" id="bracketGrid" style="margin-top:16px"></div>
-  `;
-
-  const grid = wrap.querySelector('#bracketGrid');
-
-  ROUND_ORDER.forEach(round=>{
-    const col = document.createElement('div');
-    col.className = 'bracket-col';
-
-    const header = document.createElement('div');
-    header.className = 'card';
-    header.innerHTML = `<strong>${round}</strong>`;
-    col.appendChild(header);
-
-    matches.filter(m=>m.round===round).forEach(m=>{
-      const disabled = (m.home==='TBD' || m.away==='TBD' || m.home===m.away);
-      const c = document.createElement('div');
-      c.className = 'bracket-card';
-
-      const extra = m.id===104 ? `
-        <div class="row" style="margin-top:10px;justify-content:flex-end">
-          <button type="button" class="btn secondary"
-            style="min-height:36px;padding:.4rem .9rem;font-size:13px"
-            onclick="state.currentView='results';render();">
-            Завершить
-          </button>
-        </div>
-      ` : '';
-
-      c.innerHTML = `
-        <div class="small">Матч ${m.id}</div>
-        <button type="button"
-          class="bracket-team ${m.winner===m.home?'is-winner':''} ${disabled?'is-disabled':''}"
-          data-team="home" ${disabled?'disabled':''}>
-          <span>${m.home}</span>
-          <span>${m.winner===m.home?'<span class="winner-mark">✓</span>':''}</span>
-        </button>
-        <button type="button"
-          class="bracket-team ${m.winner===m.away?'is-winner':''} ${disabled?'is-disabled':''}"
-          data-team="away" ${disabled?'disabled':''}>
-          <span>${m.away}</span>
-          <span>${m.winner===m.away?'<span class="winner-mark">✓</span>':''}</span>
-        </button>
-        ${extra}
-      `;
-
-      c.querySelectorAll('.bracket-team').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          if(disabled) return;
-          state.playoffPicks[m.id] = btn.dataset.team==='home'?m.home:m.away;
-          render();
-        });
-      });
-
-      col.appendChild(c);
-    });
-
-    grid.appendChild(col);
-  });
-}
-
-function finalPayload(){
-  const {standings,thirds,matches} = computeBracket();
-  const final = matches.find(m=>m.id===104);
-  const bronze = matches.find(m=>m.id===103);
-
-  return {
-    tournament_slug: TOURNAMENT_SLUG,
-    submitted_at: new Date().toISOString(),
-    user: tg?.initDataUnsafe?.user || null,
-    groups: state.groupMatches,
-    playoff: state.playoffPicks,
-    champion: final?.winner || null,
-    runner_up: final?.winner
-      ? (final.winner===final.home?final.away:final.home)
-      : null,
-    third_place: bronze?.winner || null,
-    fourth_place: bronze?.winner
-      ? (bronze.winner===bronze.home?bronze.away:bronze.home)
-      : null,
-    standings,
-    third_places: thirds,
-    matches
-  };
-}
-
-async function saveSubmission(){
-  const user = tg?.initDataUnsafe?.user;
-  if(!BACKEND_BASE_URL){
-    alert('Не задан BACKEND_BASE_URL в miniapp/config.js');
-    return;
-  }
-  if(!user){
-    alert('Нужен Telegram user внутри Mini App');
-    return;
-  }
-  const body = {
-    tournament_slug: TOURNAMENT_SLUG,
-    user:{
-      telegram_user_id:user.id,
-      username:user.username||null,
-      first_name:user.first_name||null,
-      last_name:user.last_name||null,
-      language_code:user.language_code||null
-    },
-    bracket_payload: finalPayload()
-  };
-  const res = await fetch(`${BACKEND_BASE_URL}/api/submissions`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)
-  });
-  if(!res.ok) throw new Error('save failed');
-  return res.json();
-}
-
-async function fetchCommunity(){
-  if(!BACKEND_BASE_URL) return;
-  try{
-    const res = await fetch(`${BACKEND_BASE_URL}/api/community/${TOURNAMENT_SLUG}`);
-    const data = await res.json();
-    state.community = data.snapshot?.items || data.items || [];
-  }catch(e){
-    state.community = [];
-  }
-}
-
+function renderPlayoff(){ const wrap=document.getElementById('playoffView'); const {thirds,matches}=computeBracket(); wrap.innerHTML=`<h2 style="margin-top:0">Плей-офф</h2><p class="muted">Сетка строится из твоих групповых выборов. Нажми на саму сборную, чтобы выбрать проходящую команду.</p><div class="notice">8 лучших третьих мест сейчас: ${thirds.filter(t=>t.qualified).map(t=>`${t.team} (${t.group})`).join(', ')}</div><div class="bracket-grid" id="bracketGrid" style="margin-top:16px"></div>`; const grid=wrap.querySelector('#bracketGrid'); ROUND_ORDER.forEach(round=>{ const col=document.createElement('div'); col.className='bracket-col'; const header=document.createElement('div'); header.className='card'; header.innerHTML=`<strong>${round}</strong>`; col.appendChild(header); matches.filter(m=>m.round===round).forEach(m=>{ const disabled=(m.home==='TBD'||m.away==='TBD'||m.home===m.away); const c=document.createElement('div'); c.className='bracket-card'; const extra = m.id===104?`<div class="row" style="margin-top:10px;justify-content:flex-end"><button type="button" class="btn secondary" style="min-height:36px;padding:.4rem .9rem;font-size:13px" onclick="state.currentView='results';render();">Завершить</button></div>`:''; c.innerHTML=`<div class="small">Матч ${m.id}</div><button type="button" class="bracket-team ${m.winner===m.home?'is-winner':''} ${disabled?'is-disabled':''}" data-team="home" ${disabled?'disabled':''}><span>${m.home}</span><span>${m.winner===m.home?'<span class="winner-mark">✓</span>':''}</span></button><button type="button" class="bracket-team ${m.winner===m.away?'is-winner':''} ${disabled?'is-disabled':''}" data-team="away" ${disabled?'disabled':''}"><span>${m.away}</span><span>${m.winner===m.away?'<span class="winner-mark">✓</span>':''}</span></button>${extra}`; c.querySelectorAll('.bracket-team').forEach(btn=>{ btn.addEventListener('click',()=>{ if(disabled) return; state.playoffPicks[m.id]=btn.dataset.team==='home'?m.home:m.away; render(); }); }); col.appendChild(c); }); grid.appendChild(col); }); }
+function finalPayload(){ const {standings,thirds,matches}=computeBracket(); const final=matches.find(m=>m.id===104), bronze=matches.find(m=>m.id===103), sf1=matches.find(m=>m.id===101), sf2=matches.find(m=>m.id===102); return { tournament_slug: TOURNAMENT_SLUG, submitted_at: new Date().toISOString(), user: tg?.initDataUnsafe?.user || null, groups: state.groupMatches, playoff: state.playoffPicks, champion: final?.winner || null, runner_up: final?.winner ? (final.winner===final.home?final.away:final.home) : null, third_place: bronze?.winner || null, fourth_place: bronze?.winner ? (bronze.winner===bronze.home?bronze.away:bronze.home) : null, standings, third_places: thirds, matches }; }
+async function saveSubmission(){ const user=tg?.initDataUnsafe?.user; if(!BACKEND_BASE_URL){ alert('Не задан BACKEND_BASE_URL в miniapp/config.js'); return; } if(!user){ alert('Нужен Telegram user внутри Mini App'); return; } const body={ tournament_slug: TOURNAMENT_SLUG, user:{ telegram_user_id:user.id, username:user.username||null, first_name:user.first_name||null, last_name:user.last_name||null, language_code:user.language_code||null }, bracket_payload: finalPayload() }; const res=await fetch(`${BACKEND_BASE_URL}/api/submissions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!res.ok) throw new Error('save failed'); return res.json(); }
+async function fetchCommunity(){ if(!BACKEND_BASE_URL) return; try { const res=await fetch(`${BACKEND_BASE_URL}/api/community/${TOURNAMENT_SLUG}`); const data=await res.json(); state.community = data.snapshot?.items || data.items || [];  } catch(e){  state.community=[]; } }
 function renderResults(){
-  const wrap = document.getElementById('resultsView');
-  const payload = finalPayload();
-
-  const rows = [
+  const wrap=document.getElementById('resultsView');
+  const payload=finalPayload();
+  const rows=[
     [1,payload.champion||'—'],
     [2,payload.runner_up||'—'],
     [3,payload.third_place||'—'],
     [4,payload.fourth_place||'—']
   ];
 
-  const communityRows = state.community.length
-    ? state.community
-    : [
-        {label:'Чемпион',leader:'Бразилия',share:'31%'},
-        {label:'Финалист',leader:'Франция',share:'18%'}
-      ];
-
-  wrap.innerHTML = `
-    <h2 style="margin-top:0">Итог</h2>
-    <p class="muted">Итоговые места рассчитываются автоматически.</p>
-    <div class="summary-grid">
-      <div class="card">
-        <div class="small">Чемпион</div>
-        <strong>${payload.champion||'—'}</strong>
-      </div>
-      <div class="card">
-        <div class="small">Финалист</div>
-        <strong>${payload.runner_up||'—'}</strong>
-      </div>
-      <div class="card">
-        <div class="small">3-е место</div>
-        <strong>${payload.third_place||'—'}</strong>
-      </div>
-      <div class="card">
-        <div class="small">4-е место</div>
-        <strong>${payload.fourth_place||'—'}</strong>
+  wrap.innerHTML=`<h2 style="margin-top:0">Итог</h2>
+  <p class="muted">Итоговые места рассчитываются автоматически на основе твоих выборов.</p>
+  <div class="summary-grid">
+    <div class="card"><div class="small">Чемпион</div><strong>${payload.champion||'—'}</strong></div>
+    <div class="card"><div class="small">Финалист</div><strong>${payload.runner_up||'—'}</strong></div>
+    <div class="card"><div class="small">3-е место</div><strong>${payload.third_place||'—'}</strong></div>
+    <div class="card"><div class="small">4-е место</div><strong>${payload.fourth_place||'—'}</strong></div>
+  </div>
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h3 style="margin-top:0">Итоговые места</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Место</th><th>Команда</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody>
+        </table>
       </div>
     </div>
-    <div class="grid grid-2" style="margin-top:16px">
-      <div class="card">
-        <h3 style="margin-top:0">Итоговые места</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr><th>Место</th><th>Команда</th></tr>
-              </thead>
-              <tbody>
-                ${rows.map(r=>`
-                  <tr><td>${r[0]}</td><td>${r[1]}</td></tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">Что выбрали другие</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr><th>Срез</th><th>Лидер</th><th>Доля</th></tr>
-              </thead>
-              <tbody>
-                ${communityRows.map(i=>`
-                  <tr>
-                    <td>${i.label}</td>
-                    <td>${i.leader}</td>
-                    <td>${i.share}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <div class="card">
+      <h3 style="margin-top:0">Что выбрали другие</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Срез</th><th>Лидер</th><th>Доля</th></tr></thead>
+          <tbody>${(state.community.length?state.community:[{label:'Чемпион',leader:'Бразилия',share:'31%'},{label:'Финалист',leader:'Франция',share:'18%'}]).map(i=>`<tr><td>${i.label}</td><td>${i.leader}</td><td>${i.share}</td></tr>`).join('')}</tbody>
+        </table>
       </div>
     </div>
-  `;
+  </div>`;
 }
 
-function render(){
-  renderTabs();
-  document.getElementById('groupsView')
-    .classList.toggle('hidden',state.currentView!=='groups');
-  document.getElementById('playoffView')
-    .classList.toggle('hidden',state.currentView!=='playoff');
-  document.getElementById('resultsView')
-    .classList.toggle('hidden',state.currentView!=='results');
-  renderGroups();
-  renderPlayoff();
-  renderResults();
-}
-
-fetchCommunity();
-render();
+function render(){ renderTabs(); document.getElementById('groupsView').classList.toggle('hidden',state.currentView!=='groups'); document.getElementById('playoffView').classList.toggle('hidden',state.currentView!=='playoff'); document.getElementById('resultsView').classList.toggle('hidden',state.currentView!=='results'); renderGroups(); renderPlayoff(); renderResults(); }
+fetchCommunity(); render();
 </script>
 </body>
 </html>
