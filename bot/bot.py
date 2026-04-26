@@ -19,7 +19,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     button = KeyboardButton(text='Открыть игру', web_app=WebAppInfo(url=WEB_APP_URL))
     markup = ReplyKeyboardMarkup([[button]], resize_keyboard=True)
     await update.message.reply_text(
-        'Привет. Открой Mini App и собери свой турнирный прогноз.',
+        'Привет. Для старта нажми ИГРАТЬ.',
         reply_markup=markup,
     )
 
