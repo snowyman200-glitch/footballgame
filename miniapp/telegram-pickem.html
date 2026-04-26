@@ -15,9 +15,9 @@
 <body>
 <div class="app">
   <section class="panel hero">
-    <div class="row"><span class="btn secondary" style="cursor:default">ЧМ-26</span><span class="btn secondary" style="cursor:default">104 матча</span><span class="btn secondary" style="cursor:default">12 групп</span></div>
-    <h1>Чемпионат Мира 2026</h1>
-    <p class="muted" style="margin:0">Групповой этап, рейтинг третьих мест, плей-офф, итоговые места.</p>
+    <div class="row"><span class="btn secondary" style="cursor:default">Telegram Mini App</span><span class="btn secondary" style="cursor:default">104 матча</span><span class="btn secondary" style="cursor:default">12 групп</span></div>
+    <h1>World Cup Pick'em</h1>
+    <p class="muted" style="margin:0">Полная версия: групповой этап, рейтинг третьих мест, плей-офф, итоговые места, community stats и отправка прогноза на backend.</p>
   </section>
 
   <div class="tabs" id="topTabs"></div>
@@ -85,47 +85,72 @@ function standingsForGroup(group){
 function allStandings(){ const out={}; Object.keys(GROUPS).forEach(g=>out[g]=standingsForGroup(g)); return out; }
 function thirdPlaces(standings){ const rows=Object.entries(standings).map(([g,t])=>({...t[2],group:g})); rows.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||a.team.localeCompare(b.team,'ru')); return rows.map((r,i)=>({...r,overallRank:i+1,qualified:i<8})); }
 const THIRD_MATRIX = {
-  'EFGHIJKL': {M74:'E',M77:'G',M79:'H',M80:'K',M81:'I',M82:'J',M85:'F',M87:'L'},
-  'DFGHIJKL': {M74:'H',M77:'F',M79:'G',M80:'K',M81:'I',M82:'J',M85:'D',M87:'L'},
-  'DEGHIJKL': {M74:'E',M77:'G',M79:'H',M80:'K',M81:'I',M82:'J',M85:'D',M87:'L'},
-  'DEFHIJKL': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'I',M82:'J',M85:'D',M87:'L'},
-  'DEFGIJKL': {M74:'E',M77:'F',M79:'J',M80:'K',M81:'I',M82:'G',M85:'D',M87:'L'},
-  'DEFGHJKL': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'J',M82:'G',M85:'D',M87:'L'},
-  'DEFGHIKL': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'I',M82:'G',M85:'D',M87:'L'},
-  'DEFGHIJL': {M74:'E',M77:'F',M79:'H',M80:'I',M81:'J',M82:'G',M85:'D',M87:'L'},
-  'DEFGHIJK': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'J',M82:'G',M85:'D',M87:'I'},
-  'CFGHIJKL': {M74:'H',M77:'F',M79:'J',M80:'K',M81:'I',M82:'G',M85:'C',M87:'L'},
-  'CEGHIJKL': {M74:'E',M77:'G',M79:'H',M80:'K',M81:'I',M82:'J',M85:'C',M87:'L'},
-  'CEFHIJKL': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'I',M82:'J',M85:'C',M87:'L'},
-  'CEFGIJKL': {M74:'E',M77:'F',M79:'J',M80:'K',M81:'I',M82:'G',M85:'C',M87:'L'},
-  'CEFGHJKL': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'J',M82:'G',M85:'C',M87:'L'},
-  'CEFGHIKL': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'I',M82:'G',M85:'C',M87:'L'},
-  'CEFGHIJL': {M74:'E',M77:'F',M79:'H',M80:'I',M81:'J',M82:'G',M85:'C',M87:'L'},
-  'CEFGHIJK': {M74:'E',M77:'F',M79:'H',M80:'K',M81:'J',M82:'G',M85:'C',M87:'I'},
-  'CDGHIJKL': {M74:'H',M77:'D',M79:'J',M80:'K',M81:'I',M82:'G',M85:'C',M87:'L'},
-  'CDFHIJKL': {M74:'H',M77:'F',M79:'H',M80:'K',M81:'I',M82:'J',M85:'D',M87:'L'},
-  'CDFGIJKL': {M74:'J',M77:'F',M79:'J',M80:'K',M81:'I',M82:'G',M85:'D',M87:'L'},
-  'CDFGHJKL': {M74:'H',M77:'F',M79:'H',M80:'K',M81:'J',M82:'G',M85:'D',M87:'L'},
-  'CDFGHIKL': {M74:'H',M77:'F',M79:'H',M80:'K',M81:'I',M82:'G',M85:'D',M87:'L'},
-  'CDFGHIJL': {M74:'H',M77:'F',M79:'H',M80:'I',M81:'J',M82:'G',M85:'D',M87:'L'},
-  'CDFGHIJK': {M74:'H',M77:'F',M79:'H',M80:'K',M81:'J',M82:'G',M85:'D',M87:'I'},
-  'CDEHIJKL': {M74:'E',M77:'D',M79:'H',M80:'K',M81:'I',M82:'J',M85:'C',M87:'L'},
-  'CDEGIJKL': {M74:'E',M77:'D',M79:'J',M80:'K',M81:'I',M82:'G',M85:'C',M87:'L'},
-  'CDEGHJKL': {M74:'E',M77:'D',M79:'H',M80:'K',M81:'J',M82:'G',M85:'C',M87:'L'},
-  'CDEGHIKL': {M74:'E',M77:'D',M79:'H',M80:'K',M81:'I',M82:'G',M85:'C',M87:'L'},
-  'CDEGHIJL': {M74:'E',M77:'D',M79:'H',M80:'I',M81:'J',M82:'G',M85:'C',M87:'L'},
-  'CDEGHIJK': {M74:'E',M77:'D',M79:'H',M80:'K',M81:'J',M82:'G',M85:'C',M87:'I'}
+  'CDEFGHIJ': { M74: 'C', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'E', M87: 'I' },
+  'CDEFGHIK': { M74: 'C', M77: 'G', M79: 'E', M80: 'D', M81: 'H', M82: 'F', M85: 'I', M87: 'K' },
+  'CDEFGHIL': { M74: 'C', M77: 'G', M79: 'E', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'I' },
+  'CDEFGHJK': { M74: 'C', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'E', M87: 'K' },
+  'CDEFGHJL': { M74: 'C', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'E' },
+  'CDEFGHKL': { M74: 'C', M77: 'G', M79: 'E', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CDEFGIJK': { M74: 'C', M77: 'G', M79: 'E', M80: 'D', M81: 'J', M82: 'F', M85: 'I', M87: 'K' },
+  'CDEFGIJL': { M74: 'C', M77: 'G', M79: 'E', M80: 'D', M81: 'J', M82: 'F', M85: 'L', M87: 'I' },
+  'CDEFGIKL': { M74: 'C', M77: 'G', M79: 'E', M80: 'D', M81: 'I', M82: 'F', M85: 'L', M87: 'K' },
+  'CDEFGJKL': { M74: 'C', M77: 'G', M79: 'E', M80: 'D', M81: 'J', M82: 'F', M85: 'L', M87: 'K' },
+  'CDEFHIJK': { M74: 'C', M77: 'J', M79: 'E', M80: 'D', M81: 'H', M82: 'F', M85: 'I', M87: 'K' },
+  'CDEFHIJL': { M74: 'C', M77: 'J', M79: 'E', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'I' },
+  'CDEFHIKL': { M74: 'C', M77: 'E', M79: 'I', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CDEFHJKL': { M74: 'C', M77: 'J', M79: 'E', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CDEFIJKL': { M74: 'C', M77: 'J', M79: 'E', M80: 'D', M81: 'I', M82: 'F', M85: 'L', M87: 'K' },
+  'CDEGHIJK': { M74: 'E', M77: 'G', M79: 'J', M80: 'C', M81: 'H', M82: 'D', M85: 'I', M87: 'K' },
+  'CDEGHIJL': { M74: 'E', M77: 'G', M79: 'J', M80: 'C', M81: 'H', M82: 'D', M85: 'L', M87: 'I' },
+  'CDEGHIKL': { M74: 'E', M77: 'G', M79: 'I', M80: 'C', M81: 'H', M82: 'D', M85: 'L', M87: 'K' },
+  'CDEGHJKL': { M74: 'E', M77: 'G', M79: 'J', M80: 'C', M81: 'H', M82: 'D', M85: 'L', M87: 'K' },
+  'CDEGIJKL': { M74: 'E', M77: 'G', M79: 'I', M80: 'C', M81: 'J', M82: 'D', M85: 'L', M87: 'K' },
+  'CDEHIJKL': { M74: 'E', M77: 'J', M79: 'I', M80: 'C', M81: 'H', M82: 'D', M85: 'L', M87: 'K' },
+  'CDFGHIJK': { M74: 'C', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'I', M87: 'K' },
+  'CDFGHIJL': { M74: 'C', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'I' },
+  'CDFGHIKL': { M74: 'C', M77: 'G', M79: 'I', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CDFGHJKL': { M74: 'C', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CDFGIJKL': { M74: 'C', M77: 'G', M79: 'I', M80: 'D', M81: 'J', M82: 'F', M85: 'L', M87: 'K' },
+  'CDFHIJKL': { M74: 'C', M77: 'J', M79: 'I', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CDGHIJKL': { M74: 'H', M77: 'G', M79: 'I', M80: 'C', M81: 'J', M82: 'D', M85: 'L', M87: 'K' },
+  'CEFGHIJK': { M74: 'E', M77: 'G', M79: 'J', M80: 'C', M81: 'H', M82: 'F', M85: 'I', M87: 'K' },
+  'CEFGHIJL': { M74: 'E', M77: 'G', M79: 'J', M80: 'C', M81: 'H', M82: 'F', M85: 'L', M87: 'I' },
+  'CEFGHIKL': { M74: 'E', M77: 'G', M79: 'I', M80: 'C', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CEFGHJKL': { M74: 'E', M77: 'G', M79: 'J', M80: 'C', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CEFGIJKL': { M74: 'E', M77: 'G', M79: 'I', M80: 'C', M81: 'J', M82: 'F', M85: 'L', M87: 'K' },
+  'CEFHIJKL': { M74: 'E', M77: 'J', M79: 'I', M80: 'C', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'CEGHIJKL': { M74: 'E', M77: 'J', M79: 'I', M80: 'C', M81: 'H', M82: 'G', M85: 'L', M87: 'K' },
+  'CFGHIJKL': { M74: 'H', M77: 'G', M79: 'I', M80: 'C', M81: 'J', M82: 'F', M85: 'L', M87: 'K' },
+  'DEFGHIJK': { M74: 'E', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'I', M87: 'K' },
+  'DEFGHIJL': { M74: 'E', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'I' },
+  'DEFGHIKL': { M74: 'E', M77: 'G', M79: 'I', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'DEFGHJKL': { M74: 'E', M77: 'G', M79: 'J', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'DEFGIJKL': { M74: 'E', M77: 'G', M79: 'I', M80: 'D', M81: 'J', M82: 'F', M85: 'L', M87: 'K' },
+  'DEFHIJKL': { M74: 'E', M77: 'J', M79: 'I', M80: 'D', M81: 'H', M82: 'F', M85: 'L', M87: 'K' },
+  'DEGHIJKL': { M74: 'E', M77: 'J', M79: 'I', M80: 'D', M81: 'H', M82: 'G', M85: 'L', M87: 'K' },
+  'DFGHIJKL': { M74: 'H', M77: 'G', M79: 'I', M80: 'D', M81: 'J', M82: 'F', M85: 'L', M87: 'K' },
+  'EFGHIJKL': { M74: 'E', M77: 'J', M79: 'I', M80: 'F', M81: 'H', M82: 'G', M85: 'L', M87: 'K' },
 };
 function resolveSlot(slot, ctx){ if(slot.type==='winner') return ctx.standings[slot.group][0].team; if(slot.type==='runner') return ctx.standings[slot.group][1].team; if(slot.type==='third') return ctx.thirdAssignments[slot.matchId] || 'TBD'; if(slot.type==='match') return ctx.winners[slot.match]||'TBD'; if(slot.type==='loser') return ctx.losers[slot.match]||'TBD'; return 'TBD'; }
 function assignThirdTeams(thirds){
-  const eligibleQualified = thirds.filter(t=>t.qualified && 'CDEFGHIJKL'.includes(t.group));
-  const qualified = eligibleQualified.map(t=>t.group).sort().join('');
-  const mapping = THIRD_MATRIX[qualified];
-  if(!mapping) return {};
-  const byGroup = Object.fromEntries(eligibleQualified.map(t=>[t.group, t.team]));
-  return Object.fromEntries(Object.entries(mapping).map(([matchId, group])=>[matchId, byGroup[group] || 'TBD']));
+  const eligibleQualified = thirds.filter(t => t.qualified && 'CDEFGHIJKL'.includes(t.group));
+  const qualifiedKey = eligibleQualified.map(t => t.group).sort().join('');
+  const mapping = THIRD_MATRIX[qualifiedKey];
+  if(!mapping){
+    return {
+      __debug: {
+        qualifiedKey,
+        eligibleGroups: eligibleQualified.map(t => t.group),
+        eligibleTeams: eligibleQualified.map(t => `${t.group}: ${t.team}`)
+      }
+    };
+  }
+  const byGroup = Object.fromEntries(eligibleQualified.map(t => [t.group, t.team]));
+  const assigned = Object.fromEntries(Object.entries(mapping).map(([matchId, group]) => [matchId, byGroup[group] || 'TBD']));
+  assigned.__debug = { qualifiedKey, eligibleGroups: eligibleQualified.map(t => t.group), eligibleTeams: eligibleQualified.map(t => `${t.group}: ${t.team}`) };
+  return assigned;
 }
-function computeBracket(){ const standings=allStandings(); const thirds=thirdPlaces(standings); const thirdAssignments=assignThirdTeams(thirds); const ctx={standings,thirds,thirdAssignments,winners:{},losers:{}}; const matches=PLAYOFF_DEFS.map(def=>{ const leftSlot = def.left.type==='third' ? {...def.left, matchId:def.id} : def.left; const rightSlot = def.right.type==='third' ? {...def.right, matchId:def.id} : def.right; const home=resolveSlot(leftSlot,ctx); const away=resolveSlot(rightSlot,ctx); let winner=state.playoffPicks[def.id]||null; if(winner&&winner!==home&&winner!==away) winner=null; if(winner){ctx.winners[def.id]=winner;ctx.losers[def.id]=winner===home?away:home;} return {...def,home,away,winner}; }); return {standings,thirds,matches}; }
+function computeBracket(){ const standings=allStandings(); const thirds=thirdPlaces(standings); const thirdAssignments=assignThirdTeams(thirds); const ctx={standings,thirds,thirdAssignments,winners:{},losers:{}}; const matches=PLAYOFF_DEFS.map(def=>{ const leftSlot = def.left.type==='third' ? {...def.left, matchId:def.id} : def.left; const rightSlot = def.right.type==='third' ? {...def.right, matchId:def.id} : def.right; const home=resolveSlot(leftSlot,ctx); const away=resolveSlot(rightSlot,ctx); let winner=state.playoffPicks[def.id]||null; if(winner&&winner!==home&&winner!==away) winner=null; if(winner){ctx.winners[def.id]=winner;ctx.losers[def.id]=winner===home?away:home;} return {...def,home,away,winner}; }); return {standings,thirds,matches,thirdAssignments}; }
 function safeCleanup(){ const {matches}=computeBracket(); matches.forEach(m=>{ const w=state.playoffPicks[m.id]; if(w&&w!==m.home&&w!==m.away) delete state.playoffPicks[m.id]; }); }
 function renderTabs(){ const tabs=document.getElementById('topTabs'); tabs.innerHTML=''; [{id:'groups',label:'Группы'},{id:'playoff',label:'Плей-офф'},{id:'results',label:'Итог'}].forEach(t=>{ const b=document.createElement('button'); b.className=`tab ${state.currentView===t.id?'active':''}`; b.textContent=t.label; b.onclick=()=>{state.currentView=t.id; render();}; tabs.appendChild(b); }); if(state.currentView==='groups'){ Object.keys(GROUPS).forEach(g=>{ const b=document.createElement('button'); b.className=`tab ${state.currentGroup===g?'active':''}`; b.textContent=`Группа ${g}`; b.onclick=()=>{state.currentGroup=g; render();}; tabs.appendChild(b); }); } }
 function renderGroups(){ const wrap=document.getElementById('groupsView'); const standings=allStandings(); const thirds=thirdPlaces(standings); const matches=groupMatchIndex[state.currentGroup]; wrap.innerHTML=`<h2 style="margin-top:0">Групповой этап</h2><p class="muted">Теперь ты выбираешь точный счёт каждого матча. Таблица группы и рейтинг третьих мест пересчитываются по забитым и пропущенным мячам.</p><div id="groupMatchList"></div><div class="grid grid-2" style="margin-top:16px"><div class="card"><h3 style="margin-top:0">Таблица группы ${state.currentGroup}</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>Команда</th><th>О</th><th>В</th><th>Н</th><th>П</th><th>ЗМ</th><th>ПМ</th><th>РМ</th></tr></thead><tbody>${standings[state.currentGroup].map(t=>`<tr><td class="${t.rank<3?'rank-good':''}">${t.rank}</td><td>${t.team}</td><td>${t.pts}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}</td><td>${t.ga}</td><td>${t.gd}</td></tr>`).join('')}</tbody></table></div></div><div class="card"><h3 style="margin-top:0">Рейтинг третьих мест</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>Группа</th><th>Команда</th><th>О</th><th>РМ</th><th>Статус</th></tr></thead><tbody>${thirds.map(t=>`<tr><td>${t.overallRank}</td><td>${t.group}</td><td>${t.team}</td><td>${t.pts}</td><td>${t.gd}</td><td class="${t.qualified?'rank-mid':'rank-bad'}">${t.qualified?'Проходит':'Вылетает'}</td></tr>`).join('')}</tbody></table></div></div></div>`;
@@ -137,7 +162,9 @@ function renderGroups(){ const wrap=document.getElementById('groupsView'); const
     list.appendChild(el); });
 }
 function renderPlayoff(){ const wrap=document.getElementById('playoffView'); const {thirds,matches}=computeBracket(); wrap.innerHTML=`<h2 style="margin-top:0">Плей-офф</h2><p class="muted">Сетка строится из твоих групповых выборов. Здесь выбирается только проходящая команда.</p><div class="notice">8 лучших третьих мест сейчас: ${thirds.filter(t=>t.qualified).map(t=>`${t.team} (${t.group})`).join(', ')}</div><div class="bracket-grid" id="bracketGrid" style="margin-top:16px"></div>`; const grid=wrap.querySelector('#bracketGrid'); ROUND_ORDER.forEach(round=>{ const col=document.createElement('div'); col.className='bracket-col'; const header=document.createElement('div'); header.className='card'; header.innerHTML=`<strong>${round}</strong>`; col.appendChild(header); matches.filter(m=>m.round===round).forEach(m=>{ const c=document.createElement('div'); c.className='bracket-card'; c.innerHTML=`<div class="small">Матч ${m.id}</div><div class="bracket-team"><span>${m.home}</span><span>${m.winner===m.home?'<span class="winner-mark">✓</span>':''}</span></div><div class="bracket-team"><span>${m.away}</span><span>${m.winner===m.away?'<span class="winner-mark">✓</span>':''}</span></div><div class="row" style="margin-top:10px"></div>`; const row=c.querySelector('.row'); [m.home,m.away].forEach(team=>{ const b=document.createElement('button'); b.className=`btn ${m.winner===team?'primary':'secondary'}`; b.textContent=`Проходит: ${team}`; b.disabled=(m.home==='TBD'||m.away==='TBD'||m.home===m.away); b.onclick=()=>{state.playoffPicks[m.id]=team; render();}; row.appendChild(b); }); col.appendChild(c); }); grid.appendChild(col); }); }
-function finalPayload(){ const {standings,thirds,matches}=computeBracket(); const final=matches.find(m=>m.id===104), bronze=matches.find(m=>m.id===103), sf1=matches.find(m=>m.id===101), sf2=matches.find(m=>m.id===102); return { tournament_slug: TOURNAMENT_SLUG, submitted_at: new Date().toISOString(), user: tg?.initDataUnsafe?.user || null, groups: state.groupMatches, playoff: state.playoffPicks, champion: final?.winner || null, runner_up: final?.winner ? (final.winner===final.home?final.away:final.home) : null, third_place: bronze?.winner || null, fourth_place: bronze?.winner ? (bronze.winner===bronze.home?bronze.away:bronze.home) : null, standings, third_places: thirds, matches }; }
+function finalPayload(){ const {standings,thirds,matches,thirdAssignments}=computeBracket();
+  const unresolvedThird = matches.filter(m => [74,77,79,80,81,82,85,87].includes(m.id) && (m.home === 'TBD' || m.away === 'TBD'));
+  const debugInfo = thirdAssignments.__debug || {}; const final=matches.find(m=>m.id===104), bronze=matches.find(m=>m.id===103), sf1=matches.find(m=>m.id===101), sf2=matches.find(m=>m.id===102); return { tournament_slug: TOURNAMENT_SLUG, submitted_at: new Date().toISOString(), user: tg?.initDataUnsafe?.user || null, groups: state.groupMatches, playoff: state.playoffPicks, champion: final?.winner || null, runner_up: final?.winner ? (final.winner===final.home?final.away:final.home) : null, third_place: bronze?.winner || null, fourth_place: bronze?.winner ? (bronze.winner===bronze.home?bronze.away:bronze.home) : null, standings, third_places: thirds, matches }; }
 async function saveSubmission(){ const user=tg?.initDataUnsafe?.user; if(!BACKEND_BASE_URL){ alert('Не задан BACKEND_BASE_URL в miniapp/config.js'); return; } if(!user){ alert('Нужен Telegram user внутри Mini App'); return; } const body={ tournament_slug: TOURNAMENT_SLUG, user:{ telegram_user_id:user.id, username:user.username||null, first_name:user.first_name||null, last_name:user.last_name||null, language_code:user.language_code||null }, bracket_payload: finalPayload() }; const res=await fetch(`${BACKEND_BASE_URL}/api/submissions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!res.ok) throw new Error('save failed'); return res.json(); }
 async function fetchCommunity(){ if(!BACKEND_BASE_URL) return; try { const res=await fetch(`${BACKEND_BASE_URL}/api/community/${TOURNAMENT_SLUG}`); const data=await res.json(); state.community = data.snapshot?.items || data.items || [];  } catch(e){  state.community=[]; } }
 function renderResults(){
