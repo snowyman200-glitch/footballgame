@@ -121,21 +121,6 @@
       cursor:pointer;
     }
 
-    .btn.primary{
-      background:var(--primary);
-      color:#111315;
-    }
-
-    .btn.secondary{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-    }
-
-    .btn[disabled]{
-      opacity:.65;
-      cursor:not-allowed;
-    }
-
     .tab.top-level{
       background:rgba(200,169,106,.08);
       border:1px solid rgba(200,169,106,.24);
@@ -444,7 +429,6 @@ const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 const CONFIG = window.APP_CONFIG || {};
-const BACKEND_BASE_URL = CONFIG.BACKEND_BASE_URL || '';
 const TOURNAMENT_SLUG = CONFIG.TOURNAMENT_SLUG || 'world-cup-2026-demo';
 
 const GROUPS = {
@@ -526,9 +510,7 @@ const state = {
   groupMatches:{},
   groupFairPlay:{},
   fairPlayOpen:{},
-  playoffPicks:{},
-  saving:false,
-  lastSaveOk:false
+  playoffPicks:{}
 };
 
 const groupMatchIndex = {};
@@ -1163,53 +1145,6 @@ function finalPayload(){
   };
 }
 
-async function saveSubmission(){
-  const user = tg?.initDataUnsafe?.user;
-  if(!BACKEND_BASE_URL){
-    alert('Не задан BACKEND_BASE_URL в miniapp/config.js');
-    return;
-  }
-  if(!user){
-    alert('Нужен Telegram user внутри Mini App');
-    return;
-  }
-  const body = {
-    tournament_slug: TOURNAMENT_SLUG,
-    user:{
-      telegram_user_id:user.id,
-      username:user.username||null,
-      first_name:user.first_name||null,
-      last_name:user.last_name||null,
-      language_code:user.language_code||null
-    },
-    bracket_payload: finalPayload()
-  };
-  const res = await fetch(`${BACKEND_BASE_URL}/api/submissions`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)
-  });
-  if(!res.ok) throw new Error('save failed');
-  return res.json();
-}
-
-async function handleSaveClick(){
-  if(state.saving) return;
-  state.saving = true;
-  state.lastSaveOk = false;
-  renderResults();
-  try{
-    await saveSubmission();     // сохраняем только для статистики на бэке [web:39]
-    state.lastSaveOk = true;
-  }catch(e){
-    state.lastSaveOk = false;
-    alert('Не удалось сохранить результат. Попробуй ещё раз.');
-  }finally{
-    state.saving = false;
-    renderResults();
-  }
-}
-
 function renderResults(){
   const wrap = document.getElementById('resultsView');
   const payload = finalPayload();
@@ -1221,15 +1156,9 @@ function renderResults(){
     [4,payload.fourth_place||'—']
   ];
 
-  const saveLabel = state.saving
-    ? 'Сохраняем…'
-    : state.lastSaveOk
-    ? 'Сохранено'
-    : 'Сохранить результат';
-
   wrap.innerHTML = `
     <h2 style="margin-top:0">Итог</h2>
-    <p class="muted">Итоговые места рассчитываются автоматически. Кнопка «Сохранить результат» отправляет твой прогноз на сервер.</p>
+    <p class="muted">Итоговые места рассчитываются автоматически на основе твоих прогнозов.</p>
 
     <div class="summary-grid">
       <div class="card">
@@ -1250,17 +1179,6 @@ function renderResults(){
       </div>
     </div>
 
-    <div class="row" style="margin-top:16px;justify-content:flex-end;gap:10px">
-      <button
-        type="button"
-        class="btn primary"
-        id="saveResultsBtn"
-        ${state.saving ? 'disabled' : ''}
-      >
-        ${saveLabel}
-      </button>
-    </div>
-
     <div class="card" style="margin-top:16px">
       <h3 style="margin-top:0">Итоговые места</h3>
       <div class="table-wrap">
@@ -1279,11 +1197,6 @@ function renderResults(){
       </div>
     </div>
   `;
-
-  const saveBtn = document.getElementById('saveResultsBtn');
-  if (saveBtn){
-    saveBtn.addEventListener('click', handleSaveClick);
-  }
 }
 
 function render(){
