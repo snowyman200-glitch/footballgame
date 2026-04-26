@@ -16,12 +16,8 @@
 <div class="app">
   <section class="panel hero">
     <div class="row"><span class="btn secondary" style="cursor:default">Telegram Mini App</span><span class="btn secondary" style="cursor:default">104 матча</span><span class="btn secondary" style="cursor:default">12 групп</span></div>
-    <h1>Тетрадка</h1>
-      <div class="card"><div class="small">Пользователь</div><strong id="userOut">Гость</strong><div class="muted">Telegram user определяется автоматически</div></div>
-      <div class="card"><div class="small">Турнир</div><strong id="slugOut">world-cup-2026-demo</strong><div class="muted">Данные можно менять через `config.js`</div></div>
+    <h1>Чемпионат Мира 2026</h1>
     <p class="muted" style="margin:0">Групповой этап, рейтинг третьих мест, плей-офф, итоговые места.</p>
-    <div class="grid grid-3">
-    </div>
   </section>
 
   <div class="tabs" id="topTabs"></div>
@@ -38,8 +34,6 @@ const CONFIG = window.APP_CONFIG || {};
 const BACKEND_BASE_URL = CONFIG.BACKEND_BASE_URL || '';
 const TOURNAMENT_SLUG = CONFIG.TOURNAMENT_SLUG || 'world-cup-2026-demo';
 
-document.getElementById('slugOut').textContent = TOURNAMENT_SLUG;
-document.getElementById('userOut').textContent = tg?.initDataUnsafe?.user ? `${tg.initDataUnsafe.user.first_name || ''} ${tg.initDataUnsafe.user.last_name || ''}`.trim() || tg.initDataUnsafe.user.username || 'Telegram user' : 'Гость';
 
 const GROUPS = {
 A:['Мексика','ЮАР','Южная Корея','Чехия'], B:['Канада','Босния и Герцеговина','Катар','Швейцария'], C:['Бразилия','Марокко','Гаити','Шотландия'], D:['США','Парагвай','Австралия','Турция'], E:['Германия','Кюрасао','Кот-д’Ивуар','Эквадор'], F:['Нидерланды','Япония','Тунис','Швеция'], G:['Бельгия','Египет','Иран','Новая Зеландия'], H:['Испания','Кабо-Верде','Саудовская Аравия','Уругвай'], I:['Франция','Сенегал','Норвегия','Ирак'], J:['Аргентина','Алжир','Австрия','Иордания'], K:['Португалия','Узбекистан','Колумбия','ДР Конго'], L:['Англия','Хорватия','Гана','Панама']
@@ -88,11 +82,47 @@ function renderGroups(){ const wrap=document.getElementById('groupsView'); const
 function renderPlayoff(){ const wrap=document.getElementById('playoffView'); const {thirds,matches}=computeBracket(); wrap.innerHTML=`<h2 style="margin-top:0">Плей-офф</h2><p class="muted">Сетка строится из твоих групповых выборов. Здесь выбирается только проходящая команда.</p><div class="notice">8 лучших третьих мест сейчас: ${thirds.filter(t=>t.qualified).map(t=>`${t.team} (${t.group})`).join(', ')}</div><div class="bracket-grid" id="bracketGrid" style="margin-top:16px"></div>`; const grid=wrap.querySelector('#bracketGrid'); ROUND_ORDER.forEach(round=>{ const col=document.createElement('div'); col.className='bracket-col'; const header=document.createElement('div'); header.className='card'; header.innerHTML=`<strong>${round}</strong>`; col.appendChild(header); matches.filter(m=>m.round===round).forEach(m=>{ const c=document.createElement('div'); c.className='bracket-card'; c.innerHTML=`<div class="small">Матч ${m.id}</div><div class="bracket-team"><span>${m.home}</span><span>${m.winner===m.home?'<span class="winner-mark">✓</span>':''}</span></div><div class="bracket-team"><span>${m.away}</span><span>${m.winner===m.away?'<span class="winner-mark">✓</span>':''}</span></div><div class="row" style="margin-top:10px"></div>`; const row=c.querySelector('.row'); [m.home,m.away].forEach(team=>{ const b=document.createElement('button'); b.className=`btn ${m.winner===team?'primary':'secondary'}`; b.textContent=`Проходит: ${team}`; b.disabled=(m.home==='TBD'||m.away==='TBD'||m.home===m.away); b.onclick=()=>{state.playoffPicks[m.id]=team; render();}; row.appendChild(b); }); col.appendChild(c); }); grid.appendChild(col); }); }
 function finalPayload(){ const {standings,thirds,matches}=computeBracket(); const final=matches.find(m=>m.id===104), bronze=matches.find(m=>m.id===103), sf1=matches.find(m=>m.id===101), sf2=matches.find(m=>m.id===102); return { tournament_slug: TOURNAMENT_SLUG, submitted_at: new Date().toISOString(), user: tg?.initDataUnsafe?.user || null, groups: state.groupMatches, playoff: state.playoffPicks, champion: final?.winner || null, runner_up: final?.winner ? (final.winner===final.home?final.away:final.home) : null, third_place: bronze?.winner || null, fourth_place: bronze?.winner ? (bronze.winner===bronze.home?bronze.away:bronze.home) : null, standings, third_places: thirds, matches }; }
 async function saveSubmission(){ const user=tg?.initDataUnsafe?.user; if(!BACKEND_BASE_URL){ alert('Не задан BACKEND_BASE_URL в miniapp/config.js'); return; } if(!user){ alert('Нужен Telegram user внутри Mini App'); return; } const body={ tournament_slug: TOURNAMENT_SLUG, user:{ telegram_user_id:user.id, username:user.username||null, first_name:user.first_name||null, last_name:user.last_name||null, language_code:user.language_code||null }, bracket_payload: finalPayload() }; const res=await fetch(`${BACKEND_BASE_URL}/api/submissions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!res.ok) throw new Error('save failed'); return res.json(); }
-async function fetchCommunity(){ if(!BACKEND_BASE_URL) return; try { const res=await fetch(`${BACKEND_BASE_URL}/api/community/${TOURNAMENT_SLUG}`); const data=await res.json(); state.community = data.snapshot?.items || data.items || []; document.getElementById('apiOut').textContent='API online'; } catch(e){ document.getElementById('apiOut').textContent='API offline'; state.community=[]; } }
-function renderResults(){ const wrap=document.getElementById('resultsView'); const payload=finalPayload(); const rows=[ [1,payload.champion||'—'], [2,payload.runner_up||'—'], [3,payload.third_place||'—'], [4,payload.fourth_place||'—'] ]; wrap.innerHTML=`<h2 style="margin-top:0">Итог</h2><p class="muted">После заполнения всей сетки можно сохранить прогноз и отправить его в Telegram.</p><div class="summary-grid"><div class="card"><div class="small">Чемпион</div><strong>${payload.champion||'—'}</strong></div><div class="card"><div class="small">Финалист</div><strong>${payload.runner_up||'—'}</strong></div><div class="card"><div class="small">3-е место</div><strong>${payload.third_place||'—'}</strong></div><div class="card"><div class="small">4-е место</div><strong>${payload.fourth_place||'—'}</strong></div></div><div class="grid grid-2" style="margin-top:16px"><div class="card"><h3 style="margin-top:0">Итоговые места</h3><div class="table-wrap"><table><thead><tr><th>Место</th><th>Команда</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div><div class="row" style="margin-top:14px"><button class="btn primary" id="saveBtn">Сохранить на backend</button><button class="btn secondary" id="sendBtn">Отправить в Telegram</button></div><p class="small" id="saveMsg"></p></div><div class="card"><h3 style="margin-top:0">Что выбрали другие</h3><div class="table-wrap"><table><thead><tr><th>Срез</th><th>Лидер</th><th>Доля</th></tr></thead><tbody>${(state.community.length?state.community:[{label:'Чемпион',leader:'Бразилия',share:'31%'},{label:'Финалист',leader:'Франция',share:'18%'}]).map(i=>`<tr><td>${i.label}</td><td>${i.leader}</td><td>${i.share}</td></tr>`).join('')}</tbody></table></div></div></div>`;
-  wrap.querySelector('#saveBtn').onclick=async()=>{ const msg=wrap.querySelector('#saveMsg'); msg.textContent='Сохраняю…'; try{ const data=await saveSubmission(); msg.textContent=`Сохранено: ${data.submission_id}`; }catch(e){ msg.textContent='Не удалось сохранить прогноз'; }};
-  wrap.querySelector('#sendBtn').onclick=()=>{ const payloadStr=JSON.stringify(finalPayload()); if(tg){ tg.sendData(payloadStr); wrap.querySelector('#saveMsg').textContent='JSON отправлен в Telegram'; } else { wrap.querySelector('#saveMsg').textContent='Telegram WebApp API недоступен'; } };
+async function fetchCommunity(){ if(!BACKEND_BASE_URL) return; try { const res=await fetch(`${BACKEND_BASE_URL}/api/community/${TOURNAMENT_SLUG}`); const data=await res.json(); state.community = data.snapshot?.items || data.items || [];  } catch(e){  state.community=[]; } }
+function renderResults(){
+  const wrap=document.getElementById('resultsView');
+  const payload=finalPayload();
+  const rows=[
+    [1,payload.champion||'—'],
+    [2,payload.runner_up||'—'],
+    [3,payload.third_place||'—'],
+    [4,payload.fourth_place||'—']
+  ];
+
+  wrap.innerHTML=`<h2 style="margin-top:0">Итог</h2>
+  <p class="muted">Итоговые места рассчитываются автоматически на основе твоих выборов.</p>
+  <div class="summary-grid">
+    <div class="card"><div class="small">Чемпион</div><strong>${payload.champion||'—'}</strong></div>
+    <div class="card"><div class="small">Финалист</div><strong>${payload.runner_up||'—'}</strong></div>
+    <div class="card"><div class="small">3-е место</div><strong>${payload.third_place||'—'}</strong></div>
+    <div class="card"><div class="small">4-е место</div><strong>${payload.fourth_place||'—'}</strong></div>
+  </div>
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h3 style="margin-top:0">Итоговые места</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Место</th><th>Команда</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Что выбрали другие</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Срез</th><th>Лидер</th><th>Доля</th></tr></thead>
+          <tbody>${(state.community.length?state.community:[{label:'Чемпион',leader:'Бразилия',share:'31%'},{label:'Финалист',leader:'Франция',share:'18%'}]).map(i=>`<tr><td>${i.label}</td><td>${i.leader}</td><td>${i.share}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
 }
+
 function render(){ renderTabs(); document.getElementById('groupsView').classList.toggle('hidden',state.currentView!=='groups'); document.getElementById('playoffView').classList.toggle('hidden',state.currentView!=='playoff'); document.getElementById('resultsView').classList.toggle('hidden',state.currentView!=='results'); renderGroups(); renderPlayoff(); renderResults(); }
 fetchCommunity(); render();
 </script>
