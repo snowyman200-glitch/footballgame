@@ -46,7 +46,7 @@ const PLAYOFF_DEFS = [
 {id:101,round:'Полуфинал',left:{type:'match',match:97},right:{type:'match',match:98}},{id:102,round:'Полуфинал',left:{type:'match',match:99},right:{type:'match',match:100}},{id:103,round:'Матч за 3-е место',left:{type:'loser',match:101},right:{type:'loser',match:102}},{id:104,round:'Финал',left:{type:'match',match:101},right:{type:'match',match:102}}
 ];
 const ROUND_ORDER = ['1/16 финала','1/8 финала','Четвертьфинал','Полуфинал','Матч за 3-е место','Финал'];
-const state = { currentView:'groups', currentGroup:'A', groupMatches:{}, groupFairPlay:{}, playoffPicks:{}, community:[] };
+const state = { currentView:'groups', currentGroup:'A', groupMatches:{}, groupFairPlay:{}, fairPlayOpen:{}, playoffPicks:{}, community:[] };
 const groupMatchIndex = {};
 Object.entries(GROUPS).forEach(([group, teams]) => {
   groupMatchIndex[group] = [];
@@ -166,6 +166,7 @@ function renderGroups(){ const wrap=document.getElementById('groupsView'); const
     const applyScore=(side,value)=>{ const next=normalizeScore(state.groupMatches[m.id]); next[side]=Math.max(0,Math.min(20,value)); state.groupMatches[m.id]=normalizeScore(next); safeCleanup(); render(); };
     const fairPlay = fairPlayEntry(m.id);
     const fpPanel = el.querySelector('.fairplay-panel');
+    if(state.fairPlayOpen[m.id]) fpPanel.classList.remove('hidden');
     fpPanel.innerHTML = [
       { key:'home', name:m.home, data:fairPlay.home },
       { key:'away', name:m.away, data:fairPlay.away }
@@ -173,13 +174,13 @@ function renderGroups(){ const wrap=document.getElementById('groupsView'); const
       <div class="card" style="padding:12px">
         <div class="small" style="margin-bottom:8px">${side.name}</div>
         <div class="row" style="gap:10px;flex-wrap:wrap">
-          <label class="small">Жёлтые карточки <input class="score-input fairplay-yellow" data-side="${side.key}" type="number" min="0" max="10" step="1" value="${side.data.yellow}"></label>
-          <label class="small">Удаление <select class="score-input fairplay-red" data-side="${side.key}"><option value="none" ${side.data.red==='none'?'selected':''}>Нет</option><option value="indirect" ${side.data.red==='indirect'?'selected':''}>Вторая жёлтая</option><option value="direct" ${side.data.red==='direct'?'selected':''}>Прямая красная</option><option value="yellow_direct" ${side.data.red==='yellow_direct'?'selected':''}>Жёлтая + прямая красная</option></select></label>
+          <div class="small">Жёлтые карточки<div class="score-stepper" style="margin-top:6px"><button class="score-btn fairplay-btn" data-side="${side.key}" data-action="minus" aria-label="Уменьшить жёлтые карточки ${side.name}">−</button><input class="score-input fairplay-yellow" data-side="${side.key}" type="number" min="0" max="10" step="1" value="${side.data.yellow}"><button class="score-btn fairplay-btn" data-side="${side.key}" data-action="plus" aria-label="Увеличить жёлтые карточки ${side.name}">+</button></div></div>
+          <div class="small">Удаление<div class="choice-wrap" style="margin-top:6px">${[{value:'none',label:'—',title:'Нет удаления'},{value:'indirect',label:'2Ж',title:'Вторая жёлтая'},{value:'direct',label:'К',title:'Прямая красная'},{value:'yellow_direct',label:'Ж+К',title:'Жёлтая + прямая красная'}].map(opt=>`<button type="button" title="${opt.title}" aria-label="${opt.title}" class="choice fairplay-red-btn ${side.data.red===opt.value?'selected':''}" data-side="${side.key}" data-red="${opt.value}" style="min-width:44px;padding:.65rem .8rem">${opt.label}</button>`).join('')}</div></div>
           <span class="small muted">FP: ${-fairPlayPenalty(side.data)}</span>
         </div>
       </div>
     `).join('');
-    el.querySelector('.fairplay-toggle').addEventListener('click',()=>{ fpPanel.classList.toggle('hidden'); });
+    el.querySelector('.fairplay-toggle').addEventListener('click',()=>{ fpPanel.classList.toggle('hidden'); state.fairPlayOpen[m.id]=!fpPanel.classList.contains('hidden'); });
     const applyFairPlay = (side, patch)=>{
       const currentFp = fairPlayEntry(m.id);
       state.groupFairPlay[m.id] = { home:{...currentFp.home}, away:{...currentFp.away} };
@@ -190,7 +191,8 @@ function renderGroups(){ const wrap=document.getElementById('groupsView'); const
     el.querySelectorAll('.score-input').forEach(inp=>{ if(inp.classList.contains('fairplay-yellow') || inp.classList.contains('fairplay-red')) return; inp.addEventListener('input',e=>{ const raw=e.target.value; applyScore(e.target.dataset.side, raw===''?0:Number(raw)); }); });
     el.querySelectorAll('.score-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ const side=btn.dataset.side; const currentScore=normalizeScore(state.groupMatches[m.id]); const delta=btn.dataset.action==='plus'?1:-1; applyScore(side, currentScore[side]+delta); }); });
     el.querySelectorAll('.fairplay-yellow').forEach(inp=>inp.addEventListener('input',e=>applyFairPlay(e.target.dataset.side,{yellow:Math.max(0,Math.min(10,Number(e.target.value)||0))})));
-    el.querySelectorAll('.fairplay-red').forEach(sel=>sel.addEventListener('change',e=>applyFairPlay(e.target.dataset.side,{red:e.target.value})));
+    el.querySelectorAll('.fairplay-btn').forEach(btn=>btn.addEventListener('click',()=>{ const side=btn.dataset.side; const currentFp=fairPlayEntry(m.id); const delta=btn.dataset.action==='plus'?1:-1; applyFairPlay(side,{yellow:Math.max(0,Math.min(10,currentFp[side].yellow+delta))}); }));
+    el.querySelectorAll('.fairplay-red-btn').forEach(btn=>btn.addEventListener('click',()=>applyFairPlay(btn.dataset.side,{red:btn.dataset.red})));
     list.appendChild(el); });
 }
 function renderPlayoff(){ const wrap=document.getElementById('playoffView'); const {thirds,matches}=computeBracket(); wrap.innerHTML=`<h2 style="margin-top:0">Плей-офф</h2><p class="muted">Сетка строится из твоих групповых выборов. Здесь выбирается только проходящая команда.</p><div class="notice">8 лучших третьих мест сейчас: ${thirds.filter(t=>t.qualified).map(t=>`${t.team} (${t.group})`).join(', ')}</div><div class="bracket-grid" id="bracketGrid" style="margin-top:16px"></div>`; const grid=wrap.querySelector('#bracketGrid'); ROUND_ORDER.forEach(round=>{ const col=document.createElement('div'); col.className='bracket-col'; const header=document.createElement('div'); header.className='card'; header.innerHTML=`<strong>${round}</strong>`; col.appendChild(header); matches.filter(m=>m.round===round).forEach(m=>{ const c=document.createElement('div'); c.className='bracket-card'; c.innerHTML=`<div class="small">Матч ${m.id}</div><div class="bracket-team"><span>${m.home}</span><span>${m.winner===m.home?'<span class="winner-mark">✓</span>':''}</span></div><div class="bracket-team"><span>${m.away}</span><span>${m.winner===m.away?'<span class="winner-mark">✓</span>':''}</span></div><div class="row" style="margin-top:10px"></div>`; const row=c.querySelector('.row'); [m.home,m.away].forEach(team=>{ const b=document.createElement('button'); b.className=`btn ${m.winner===team?'primary':'secondary'}`; b.textContent=`Проходит: ${team}`; b.disabled=(m.home==='TBD'||m.away==='TBD'||m.home===m.away); b.onclick=()=>{state.playoffPicks[m.id]=team; render();}; row.appendChild(b); }); col.appendChild(c); }); grid.appendChild(col); }); }
